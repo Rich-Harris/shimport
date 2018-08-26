@@ -11,7 +11,7 @@ interface Range {
 	[key: string]: any;
 }
 
-function importDecl(str: string, start: number, end: number, specifiers: Specifier[], source: string, index: number) {
+function importDecl(str: string, start: number, end: number, specifiers: Specifier[], source: string) {
 	const hint = specifiers.find(s => s.name === '*' || s.name === 'default');
 	const name = hint && hint.as;
 
@@ -126,27 +126,8 @@ const keywordChars = /[a-z]/;
 const whitespace_obj = { ' ': 1, '\t': 1, '\n': 1, '\r': 1, '\f': 1, '\v': 1, '\u00A0': 1, '\u2028': 1, '\u2029': 1 };
 
 function isWhitespace(char: string) {
+	// this is faster than testing a regex
 	return char in whitespace_obj;
-}
-
-function isPunctuatorChar(char: string) {
-	return punctuatorChars.test(char);
-}
-
-function isKeywordChar(char: string) {
-	return keywordChars.test(char);
-}
-
-function isPunctuator(str: string) {
-	return punctuators.test(str);
-}
-
-function isKeyword(str: string) {
-	return keywords.test(str);
-}
-
-function isAmbiguous(str: string) {
-	return ambiguous.test(str);
 }
 
 function isQuote(char: string) {
@@ -266,12 +247,12 @@ function find(str: string): [Range[], Range[], Range[]] {
 			if (b > 0) {
 				var a = b;
 
-				if (isPunctuatorChar(str[a - 1])) {
-					while (a > 0 && isPunctuatorChar(str[a - 1])) {
+				if (punctuatorChars.test(str[a - 1])) {
+					while (a > 0 && punctuatorChars.test(str[a - 1])) {
 						a -= 1;
 					}
 				} else {
-					while (a > 0 && isKeywordChar(str[a - 1])) {
+					while (a > 0 && keywordChars.test(str[a - 1])) {
 						a -= 1;
 					}
 				}
@@ -279,9 +260,9 @@ function find(str: string): [Range[], Range[], Range[]] {
 				var token = str.slice(a, b);
 
 				regexEnabled = token
-					? isKeyword(token) ||
-					  isPunctuator(token) ||
-					  (isAmbiguous(token) && !tokenClosesExpression())
+					? keywords.test(token) ||
+					  punctuators.test(token) ||
+					  (ambiguous.test(token) && !tokenClosesExpression())
 					: false;
 			} else {
 				regexEnabled = true;
@@ -343,8 +324,7 @@ function find(str: string): [Range[], Range[], Range[]] {
 			start,
 			i,
 			processImportSpecifiers(str.slice(specifierStart, specifierEnd).replace(/from\s*$/, '').trim()),
-			str.slice(sourceStart, sourceEnd),
-			importDeclarations.length
+			str.slice(sourceStart, sourceEnd)
 		));
 
 		return base;

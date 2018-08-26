@@ -1,11 +1,15 @@
 import { transform } from './transform';
 import { define, load } from './load';
 
-if (typeof document !== 'undefined') {
-	const scr = document.querySelector('[data-main]');
+interface Script extends Element {
+	dataset: Record<string, string>;
+}
+
+const doc = self.document;
+if (doc) {
+	const scr: Script = doc.querySelector('[data-main]');
 	if (scr) {
-		const url = scr.getAttribute('data-main');
-		load(new URL(url, document.baseURI).href);
+		load(new URL(scr.dataset.main, doc.baseURI));
 	}
 }
 
