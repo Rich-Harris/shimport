@@ -1,5 +1,9 @@
 # Shimport
 
+**WARNING** this is experimental!
+
+---
+
 A 2kb shim for `import` and `export`. Allows you to use JavaScript modules in **all** browsers, including dynamic `import()`.
 
 
