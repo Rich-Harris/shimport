@@ -128,7 +128,7 @@ class ExportDeclaration implements Range {
 		this.end = c;
 
 		while (/\S/.test(str[c])) c += 1;
-		while (!/\S/.test(str[c])) c += 1;
+		while (str[c] && !/\S/.test(str[c])) c += 1;
 
 		const nameStart = c;
 		while (/\S/.test(str[c])) c += 1;
@@ -361,11 +361,11 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 		const start = i;
 
 		const specifierStart = i += 7;
-		while (!isQuote(str[i])) i += 1;
+		while (str[i] && !isQuote(str[i])) i += 1;
 		const specifierEnd = i;
 
 		const sourceStart = i += 1;
-		while (!isQuote(str[i])) i += 1;
+		while (str[i] && !isQuote(str[i])) i += 1;
 		const sourceEnd = i++;
 
 		importDeclarations.push(new ImportDeclaration(
@@ -409,9 +409,9 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 			if (/^from[\s\n]/.test(str.slice(i, i + 5))) {
 				i += 5;
 
-				while (!isQuote(str[i])) i += 1;
+				while (str[i] && !isQuote(str[i])) i += 1;
 				const sourceStart = i += 1;
-				while (!isQuote(str[i])) i += 1;
+				while (str[i] && !isQuote(str[i])) i += 1;
 
 				source = str.slice(sourceStart, i);
 				i += 1;
@@ -431,10 +431,10 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 			i += 1;
 			while (isWhitespace(str[i])) i += 1;
 			i += 4;
-			while (!isQuote(str[i])) i += 1;
+			while (str[i] && !isQuote(str[i])) i += 1;
 
 			const sourceStart = i += 1;
-			while (!isQuote(str[i])) i += 1;
+			while (str[i] && !isQuote(str[i])) i += 1;
 			const sourceEnd = i++;
 
 			exportDeclarations.push(new ExportStarDeclaration(
