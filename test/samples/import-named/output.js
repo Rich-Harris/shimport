@@ -2,3 +2,4 @@ __shimport__.define('./import-named/input.js', ['./foo.js'], function(__import, 
 
 console.log(foo);
 });
+//# sourceURL=./import-named/input.js

@@ -2,3 +2,4 @@ __shimport__.define('./dynamic-import/input.js', [], function(__import, __export
 	console.log(foo);
 });
 });
+//# sourceURL=./dynamic-import/input.js

@@ -142,6 +142,25 @@ class ExportDeclaration implements Range {
 	}
 }
 
+class ExportStarDeclaration implements Range {
+	str: string;
+	start: number;
+	end: number;
+	source: string;
+
+	constructor(str: string, start: number, end: number, source: string) {
+		this.str = str;
+		this.start = start;
+		this.end = end;
+		this.source = source;
+	}
+
+	toString(nameBySource: Map<string, string>) {
+		const name = nameBySource.get(this.source);
+		return `Object.assign(__exports, ${name}); /*${this.str.slice(this.start, this.end)}*/`;
+	}
+}
+
 const keywords = /\b(case|default|delete|do|else|in|instanceof|new|return|throw|typeof|void)\s*$/;
 const punctuators = /(^|\{|\(|\[\.|;|,|<|>|<=|>=|==|!=|===|!==|\+|-|\*\%|<<|>>|>>>|&|\||\^|!|~|&&|\|\||\?|:|=|\+=|-=|\*=|%=|<<=|>>=|>>>=|&=|\|=|\^=|\/=|\/)\s*$/;
 const ambiguous = /(\}|\)|\+\+|--)\s*$/;
@@ -378,15 +397,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 
 		const declarationStart = i;
 
-		if (/default[\s\n]/.test(str.slice(i, i + 8))) {
-			exportDeclarations.push(new ExportDefaultDeclaration(
-				str,
-				start,
-				declarationStart
-			));
-		}
-
-		else if (str[i] === '{') {
+		if (str[i] === '{') {
 			while (str[i] !== '}') i += 1;
 			i += 1;
 
@@ -413,6 +424,32 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 				specifiersEnd,
 				i,
 				source
+			));
+		}
+
+		else if (str[i] === '*') {
+			i += 1;
+			while (isWhitespace(str[i])) i += 1;
+			i += 4;
+			while (!isQuote(str[i])) i += 1;
+
+			const sourceStart = i += 1;
+			while (!isQuote(str[i])) i += 1;
+			const sourceEnd = i++;
+
+			exportDeclarations.push(new ExportStarDeclaration(
+				str,
+				start,
+				i,
+				str.slice(sourceStart, sourceEnd)
+			));
+		}
+
+		else if (/default[\s\n]/.test(str.slice(i, i + 8))) {
+			exportDeclarations.push(new ExportDefaultDeclaration(
+				str,
+				start,
+				declarationStart
 			));
 		}
 
@@ -576,7 +613,7 @@ export function transform(source: string, id: string) {
 		if (d.name) transformed += `\n__exports.${d.name} = ${d.name};`;
 	});
 
-	transformed += '\n});'
+	transformed += `\n});\n//# sourceURL=${id}`;
 
 	return transformed;
 }
