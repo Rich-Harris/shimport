@@ -1,5 +1,2 @@
-__shimport__.load('./export-from/input.js', ['foo'], function(foo){// TODO export from
-foo = foo.default; /*import foo from 'foo'*/;
-
-console.log(foo);
+__shimport__.load('./export-from/input.js', [], function(__exports){ __exports.foo = foo; /*export { foo } from './foo.js'*/;
 });

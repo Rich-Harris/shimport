@@ -5,13 +5,123 @@ type Specifier = {
 	as: string;
 }
 
-type ImportDeclaration = {
+interface Range {
+	start: number;
+	end: number;
+	[key: string]: any;
+}
+
+class ImportDeclaration implements Range {
+	str: string;
 	start: number;
 	end: number;
 	specifiers: Specifier[];
 	source: string;
 	name: string;
 	assignments: string[];
+
+	constructor(str: string, start: number, end: number, specifiers: Specifier[], source: string, index: number) {
+		this.str = str;
+		this.start = start;
+		this.end = end;
+		this.specifiers = specifiers;
+		this.source = source;
+
+		const hint = specifiers.find(s => s.name === '*' || s.name === 'default');
+		this.name = hint ? hint.as : `__import_${index}`;
+
+		this.assignments = specifiers
+			.sort((a, b) => {
+				if (a.name === 'default') return 1;
+				if (b.name === 'default') return -1;
+			})
+			.map(s => {
+				if (s.name === '*') return null;
+				if (s.name === 'default') return `${s.as} = ${this.name}.default;`;
+				return `var ${s.as} = ${this.name}.${s.name};`;
+			});
+	}
+
+	toString() {
+		return (
+			this.assignments.join(' ') + ' /*' +
+			this.str.slice(this.start, this.end) + '*/'
+		).trim();
+	}
+}
+
+class ExportDefaultDeclaration implements Range {
+	str: string;
+	start: number;
+	end: number;
+
+	constructor(str: string, start: number, end: number) {
+		this.str = str;
+		this.start = start;
+
+		while (/\S/.test(str[end])) end += 1;
+		this.end = end;
+	}
+
+	toString() {
+		return `__exports.default =`;
+	}
+}
+
+class ExportSpecifiersDeclaration implements Range {
+	str: string;
+	start: number;
+	specifiersStart: number;
+	specifiersEnd: number;
+	end: number;
+	source: string;
+	specifiers: Specifier[];
+
+	constructor(str: string, start: number, specifiersStart: number, specifiersEnd: number, end: number, source: string) {
+		this.str = str;
+		this.start = start;
+		this.specifiersStart = specifiersStart;
+		this.specifiersEnd = specifiersEnd;
+		this.end = end;
+		this.source = source;
+
+		this.specifiers = processSpecifiers(str.slice(specifiersStart + 1, specifiersEnd - 1).trim());
+	}
+
+	toString() {
+		return this.specifiers
+			.map(s => {
+				return `__exports.${s.as} = ${s.name};`;
+			})
+			.join(' ') + ` /*${this.str.slice(this.start, this.end)}*/`
+	}
+}
+
+class ExportDeclaration implements Range {
+	str: string;
+	start: number;
+	declarationStart: number;
+	end: number;
+	name: string;
+
+	constructor(str: string, start: number, c: number) {
+		this.str = str;
+		this.start = start;
+		this.end = c;
+
+		while (/\S/.test(str[c])) c += 1;
+		while (!/\S/.test(str[c])) c += 1;
+
+		const nameStart = c;
+		while (/\S/.test(str[c])) c += 1;
+		const nameEnd = c;
+
+		this.name = str.slice(nameStart, nameEnd);
+	}
+
+	toString() {
+		return '';
+	}
 }
 
 const keywords = /\b(case|default|delete|do|else|in|instanceof|new|return|throw|typeof|void)\s*$/;
@@ -77,14 +187,13 @@ function processSpecifiers(str: string) {
 	});
 }
 
-function find(str: string) {
+function find(str: string): [ImportDeclaration[], Range[]] {
 	let quote: string;
 	let escapedFrom: State;
 	let regexEnabled = true;
 	let pfixOp = false;
 
 	const stack: State[] = [];
-	const importDeclarations: ImportDeclaration[] = [];
 
 	let start: number;
 	let state = base;
@@ -95,6 +204,9 @@ function find(str: string) {
 	var parenMatches: Record<string, number> = {};
 	var openingParenPositions: Record<string, number> = {};
 	var parenDepth = 0;
+
+	const importDeclarations: ImportDeclaration[] = [];
+	const exportDeclarations: Range[] = [];
 
 	function tokenClosesExpression() {
 		if (lsc() === ')') {
@@ -193,12 +305,12 @@ function find(str: string) {
 		}
 
 		if (char === 'i') {
-			if (str.slice(i, i + 7) === 'import ') return importDeclaration(i);
+			if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
 			if (str.slice(i, i + 7) === 'import(') return importStatement;
 		}
 
 		if (char === 'e') {
-			if (str.slice(i, i + 7) === 'export ') return exportDeclaration;
+			if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
 		}
 
 		if (!isWhitespace(char)) {
@@ -218,15 +330,14 @@ function find(str: string) {
 		while (!isQuote(str[i])) i += 1;
 		const sourceEnd = i++;
 
-		importDeclarations.push({
+		importDeclarations.push(new ImportDeclaration(
+			str,
 			start,
-			end: i,
-			specifiers: processImportSpecifiers(str.slice(specifierStart, specifierEnd).replace(/from\s*$/, '').trim()),
-			source: str.slice(sourceStart, sourceEnd),
-			// figure these out later
-			name: null,
-			assignments: null
-		});
+			i,
+			processImportSpecifiers(str.slice(specifierStart, specifierEnd).replace(/from\s*$/, '').trim()),
+			str.slice(sourceStart, sourceEnd),
+			importDeclarations.length
+		));
 
 		return base;
 	}
@@ -235,8 +346,61 @@ function find(str: string) {
 		throw new Error(`TODO import statements`);
 	}
 
-	function exportDeclaration(char: string, i: number): State {
-		throw new Error(`TODO export declarations`);
+	function exportDeclaration(i: number): State {
+		const start = i;
+
+		i += 7;
+		while (isWhitespace(str[i])) i += 1;
+
+		const declarationStart = i;
+
+		if (/default[\s\n]/.test(str.slice(i, i + 8))) {
+			exportDeclarations.push(new ExportDefaultDeclaration(
+				str,
+				start,
+				declarationStart
+			));
+		}
+
+		else if (str[i] === '{') {
+			while (str[i] !== '}') i += 1;
+			i += 1;
+
+			const specifiersEnd = i;
+
+			let source = null;
+
+			while (isWhitespace(str[i])) i += 1;
+			if (/^from[\s\n]/.test(str.slice(i, i + 5))) {
+				i += 5;
+
+				while (!isQuote(str[i])) i += 1;
+				const sourceStart = i += 1;
+				while (!isQuote(str[i])) i += 1;
+
+				source = str.slice(sourceStart, i);
+				i += 1;
+			}
+
+			exportDeclarations.push(new ExportSpecifiersDeclaration(
+				str,
+				start,
+				declarationStart,
+				specifiersEnd,
+				i,
+				source
+			));
+		}
+
+		else {
+			exportDeclarations.push(new ExportDeclaration(
+				str,
+				start,
+				declarationStart
+			));
+		}
+
+		return base;
 	}
 
 	function slash(char: string, i: number) {
@@ -336,52 +500,46 @@ function find(str: string) {
 		state('\n', str.length);
 	}
 
-	return [importDeclarations];
+	return [importDeclarations, exportDeclarations];
 }
 
 export function transform(source: string, id: string) {
 	const imports = [];
 
-	const [importDeclarations] = find(source);
+	const [importDeclarations, exportDeclarations] = find(source);
 
 	// TODO dedupe imports
-	importDeclarations.forEach((d, i) => {
-		const hint = d.specifiers.find(s => s.name === '*' || s.name === 'default');
-		d.name = hint ? hint.as : `__import_${i}`;
-
-		d.assignments = d.specifiers
-			.sort((a, b) => {
-				if (a.name === 'default') return 1;
-				if (b.name === 'default') return -1;
-			})
-			.map(s => {
-				if (s.name === '*') return null;
-				if (s.name === 'default') return `${s.as} = ${d.name}.default;`;
-				return `var ${s.as} = ${d.name}.${s.name};`;
-			});
-	});
 
 	const sources = importDeclarations.map(x => x.source);
 
 	// TODO account for dynamic imports
 
 	const deps = importDeclarations.map(d => `'${d.source}'`).join(', ');
-	const names = importDeclarations.map(d => d.name).join(', ');
+	const names = importDeclarations.map(d => d.name).concat('__exports').join(', ');
 
-	let transformed = `__shimport__.load('${id}', [${deps}], function(${names}){`;
+	let transformed = `__shimport__.load('${id}', [${deps}], function(${names}){ `;
+
+	const ranges: any[] = [...importDeclarations, ...exportDeclarations];
 
 	let c = 0;
 
-	for (let i = 0; i < importDeclarations.length; i += 1) {
-		const d = importDeclarations[i];
+	for (let i = 0; i < ranges.length; i += 1) {
+		const range = ranges[i];
 		transformed += (
-			source.slice(c, d.start) +
-			d.assignments.join(' ') + ' /*' +
-			source.slice(d.start, c = d.end) + '*/'
+			source.slice(c, range.start) +
+			range.toString()
 		);
+
+		c = range.end;
 	}
 
-	transformed += source.slice(c) + '\n});'
+	transformed += source.slice(c);
+
+	exportDeclarations.forEach(d => {
+		if (d.name) transformed += `\n__exports.${d.name} = ${d.name};`;
+	});
+
+	transformed += '\n});'
 
 	return transformed;
 }
