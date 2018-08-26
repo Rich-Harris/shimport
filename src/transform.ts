@@ -168,10 +168,10 @@ const ambiguous = /(\}|\)|\+\+|--)\s*$/;
 const punctuatorChars = /[{}()[.;,<>=+\-*%&|\^!~?:/]/;
 const keywordChars = /[a-z]/;
 
-const whitespace = /\s/;
+const whitespace_obj = { ' ': 1, '\t': 1, '\n': 1, '\r': 1, '\f': 1, '\v': 1, '\u00A0': 1, '\u2028': 1, '\u2029': 1 };
 
 function isWhitespace(char: string) {
-	return whitespace.test(char);
+	return char in whitespace_obj;
 }
 
 function isPunctuatorChar(char: string) {
@@ -336,12 +336,6 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 			return templateString;
 		}
 
-		if (char === '+' && !pfixOp && str[i - 1] === '+') {
-			pfixOp = true;
-		} else if (char === '-' && !pfixOp && str[i - 1] === '-') {
-			pfixOp = true;
-		}
-
 		if (char === 'i') {
 			if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
 			if (str.slice(i, i + 7) === 'import(') return importStatement(i);
@@ -349,6 +343,14 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 
 		if (char === 'e') {
 			if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
+		}
+
+		if (char === '+' && !pfixOp && str[i - 1] === '+') {
+			pfixOp = true;
+		} else if (char === '-' && !pfixOp && str[i - 1] === '-') {
+			pfixOp = true;
+		} else {
+			pfixOp = false;
 		}
 
 		if (!isWhitespace(char)) {
@@ -550,7 +552,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 
 	for (var i = 0; i < str.length; i += 1) {
 		if (!state) {
-			throw new Error(`Error parsing module`);
+			throw new Error(`Error parsing module at character ${i}`);
 		}
 
 		state = state(str[i], i);

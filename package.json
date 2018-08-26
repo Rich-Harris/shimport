@@ -10,6 +10,7 @@
     "@types/node": "^8.0.53",
     "glob": "^7.1.2",
     "kleur": "^2.0.1",
+    "locate-character": "^2.0.5",
     "mocha": "^4.0.1",
     "pretty-ms": "^3.2.0",
     "rollup": "^0.52.0",
