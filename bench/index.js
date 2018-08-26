@@ -18,12 +18,12 @@ function test(file) {
 	function run(code, file) {
 		try {
 			const start = process.hrtime();
-			__shimport__.transform(code, file);
+			const transformed = __shimport__.transform(code, file);
 			const time = process.hrtime(start);
 
-			const ms = time[0] * 1000 | time[1] / 1e6;
+			const duration = time[0] * 1000 | time[1] / 1e6;
 
-			return ms;
+			return { duration, transformed };
 		} catch (e) {
 			err = e;
 			return null;
@@ -43,7 +43,9 @@ function test(file) {
 		return;
 	}
 
-	console.log(`> Cold: ${c.bold.green(ms(firstRun))}`);
+	console.log(`> Cold: ${c.bold.green(ms(firstRun.duration))}`);
+
+	fs.writeFileSync(file.replace('/samples/', '/output/'), firstRun.transformed);
 
 	// warm up
 	let i = n;
@@ -52,7 +54,7 @@ function test(file) {
 	// take average
 	i = n;
 	let total = 0;
-	while (i--) total += run(code, file);
+	while (i--) total += run(code, file).duration;
 
 	const avg = total / n;
 	console.log(`> Warm: ${c.bold.green(ms(avg))} (average of ${n} runs)`);
