@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.3
+
+* More fixes
+
 ## 0.0.2
 
 * Various fixes
