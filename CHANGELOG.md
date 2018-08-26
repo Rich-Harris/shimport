@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.4
+
+* Speed
+
 ## 0.0.3
 
 * More fixes

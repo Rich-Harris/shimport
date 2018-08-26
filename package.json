@@ -1,7 +1,7 @@
 {
   "name": "shimport",
   "description": "Shim for dynamic import()",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "repository": "Rich-Harris/shimport",
   "main": "index.js",
   "files": [
