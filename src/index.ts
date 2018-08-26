@@ -5,11 +5,10 @@ interface Script extends Element {
 	dataset: Record<string, string>;
 }
 
-const doc = self.document;
-if (doc) {
-	const scr: Script = doc.querySelector('[data-main]');
+if (typeof document !== 'undefined') {
+	const scr: Script = document.querySelector('[data-main]');
 	if (scr) {
-		load(new URL(scr.dataset.main, doc.baseURI));
+		load(new URL(scr.dataset.main, document.baseURI));
 	}
 }
 

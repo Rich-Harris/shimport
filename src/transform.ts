@@ -12,7 +12,7 @@ interface Range {
 }
 
 function importDecl(str: string, start: number, end: number, specifiers: Specifier[], source: string) {
-	const hint = specifiers.find(s => s.name === '*' || s.name === 'default');
+	const hint = specifiers.find(s => s.name === '*') || specifiers.find(s => s.name === 'default');
 	const name = hint && hint.as;
 
 	return {
@@ -30,7 +30,7 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 				})
 				.map(s => {
 					if (s.name === '*') return null;
-					if (s.name === 'default') return `${s.as} = ${name}.default;`;
+					if (s.name === 'default' && s.as === name) return `${s.as} = ${name}.default;`;
 					return `var ${s.as} = ${name}.${s.name};`;
 				});
 
@@ -135,12 +135,18 @@ function isQuote(char: string) {
 }
 
 const namespaceImport = /^\*\s+as\s+(\w+)$/;
+const defaultAndStarImport = /(\w+)\s*,\s*\*\s*as\s*(\w+)$/;
 const defaultAndNamedImport = /(\w+)\s*,\s*{(.+)}$/;
 
 function processImportSpecifiers(str: string): Specifier[] {
 	let match = namespaceImport.exec(str);
 	if (match) {
 		return [{ name: '*', as: match[1] }];
+	}
+
+	match = defaultAndStarImport.exec(str);
+	if (match) {
+		return [{ name: 'default', as: match[1] }, { name: '*', as: match[2] }];
 	}
 
 	match = defaultAndNamedImport.exec(str);
