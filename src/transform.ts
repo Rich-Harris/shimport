@@ -42,16 +42,6 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 	};
 }
 
-function importStmt(start: number, end: number) {
-	return {
-		start,
-		end,
-		toString() {
-			return '__import'
-		}
-	};
-}
-
 function exportDefaultDeclaration(str: string, start: number, end: number) {
 	while (/\S/.test(str[end])) end += 1;
 
@@ -165,6 +155,112 @@ function processSpecifiers(str: string) {
 		return { name, as: as || name };
 	});
 }
+
+function getImportDeclaration(str: string, i: number) {
+	const start = i;
+
+	const specifierStart = i += 7;
+	while (str[i] && !isQuote(str[i])) i += 1;
+	const specifierEnd = i;
+
+	const sourceStart = i += 1;
+	while (str[i] && !isQuote(str[i])) i += 1;
+	const sourceEnd = i++;
+
+	return importDecl(
+		str,
+		start,
+		i,
+		processImportSpecifiers(str.slice(specifierStart, specifierEnd).replace(/from\s*$/, '').trim()),
+		str.slice(sourceStart, sourceEnd)
+	);
+}
+
+function getImportStatement(i: number) {
+	return {
+		start: i,
+		end: i + 6,
+		toString() {
+			return '__import'
+		}
+	};
+}
+
+function getExportDeclaration(str: string, i: number) {
+	const start = i;
+
+	i += 7;
+	while (isWhitespace(str[i])) i += 1;
+
+	const declarationStart = i;
+
+	if (str[i] === '{') {
+		while (str[i] !== '}') i += 1;
+		i += 1;
+
+		const specifiersEnd = i;
+
+		let source = null;
+
+		while (isWhitespace(str[i])) i += 1;
+		if (/^from[\s\n]/.test(str.slice(i, i + 5))) {
+			i += 5;
+
+			while (str[i] && !isQuote(str[i])) i += 1;
+			const sourceStart = i += 1;
+			while (str[i] && !isQuote(str[i])) i += 1;
+
+			source = str.slice(sourceStart, i);
+			i += 1;
+		}
+
+		return exportSpecifiersDeclaration(
+			str,
+			start,
+			declarationStart,
+			specifiersEnd,
+			i,
+			source
+		);
+	}
+
+	if (str[i] === '*') {
+		i += 1;
+		while (isWhitespace(str[i])) i += 1;
+		i += 4;
+		while (str[i] && !isQuote(str[i])) i += 1;
+
+		const sourceStart = i += 1;
+		while (str[i] && !isQuote(str[i])) i += 1;
+		const sourceEnd = i++;
+
+		return exportStarDeclaration(
+			str,
+			start,
+			i,
+			str.slice(sourceStart, sourceEnd)
+		);
+	}
+
+	if (/default[\s\n]/.test(str.slice(i, i + 8))) {
+		return exportDefaultDeclaration(
+			str,
+			start,
+			declarationStart
+		);
+	}
+
+	return exportDecl(
+		str,
+		start,
+		declarationStart
+	);
+}
+
+type Line = {
+	i: number;
+	str: string;
+};
 
 function find(str: string): [Range[], Range[], Range[]] {
 	let quote: string;
@@ -285,15 +381,22 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 		'i': (i: number) => {
 			if (i === 0 || isWhitespace(str[i - 1])) {
-				if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
-				if (str.slice(i, i + 7) === 'import(') return importStatement(i);
+				if (/import[\s\n]/.test(str.slice(i, i + 7))) {
+					importDeclarations.push(getImportDeclaration(str, i));
+				}
+
+				else if (str.slice(i, i + 7) === 'import(') {
+					importStatements.push(getImportStatement(i));
+				}
 			}
 			return base;
 		},
 
 		'e': (i: number) => {
 			if (i === 0 || isWhitespace(str[i - 1])) {
-				if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
+				if (str.slice(i, i + 7) === 'export ') {
+					exportDeclarations.push(getExportDeclaration(str, i));
+				}
 			}
 
 			return base;
@@ -315,112 +418,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 		if (!isWhitespace(char)) lsci = i;
 		pfixOp = false;
-
-		return base;
-	}
-
-	function importDeclaration(i: number): State {
-		const start = i;
-
-		const specifierStart = i += 7;
-		while (str[i] && !isQuote(str[i])) i += 1;
-		const specifierEnd = i;
-
-		const sourceStart = i += 1;
-		while (str[i] && !isQuote(str[i])) i += 1;
-		const sourceEnd = i++;
-
-		importDeclarations.push(importDecl(
-			str,
-			start,
-			i,
-			processImportSpecifiers(str.slice(specifierStart, specifierEnd).replace(/from\s*$/, '').trim()),
-			str.slice(sourceStart, sourceEnd)
-		));
-
-		return base;
-	}
-
-	function importStatement(i: number): State {
-		importStatements.push(importStmt(
-			i,
-			i += 6
-		));
-
-		return base;
-	}
-
-	function exportDeclaration(i: number): State {
-		const start = i;
-
-		i += 7;
-		while (isWhitespace(str[i])) i += 1;
-
-		const declarationStart = i;
-
-		if (str[i] === '{') {
-			while (str[i] !== '}') i += 1;
-			i += 1;
-
-			const specifiersEnd = i;
-
-			let source = null;
-
-			while (isWhitespace(str[i])) i += 1;
-			if (/^from[\s\n]/.test(str.slice(i, i + 5))) {
-				i += 5;
-
-				while (str[i] && !isQuote(str[i])) i += 1;
-				const sourceStart = i += 1;
-				while (str[i] && !isQuote(str[i])) i += 1;
-
-				source = str.slice(sourceStart, i);
-				i += 1;
-			}
-
-			exportDeclarations.push(exportSpecifiersDeclaration(
-				str,
-				start,
-				declarationStart,
-				specifiersEnd,
-				i,
-				source
-			));
-		}
-
-		else if (str[i] === '*') {
-			i += 1;
-			while (isWhitespace(str[i])) i += 1;
-			i += 4;
-			while (str[i] && !isQuote(str[i])) i += 1;
-
-			const sourceStart = i += 1;
-			while (str[i] && !isQuote(str[i])) i += 1;
-			const sourceEnd = i++;
-
-			exportDeclarations.push(exportStarDeclaration(
-				str,
-				start,
-				i,
-				str.slice(sourceStart, sourceEnd)
-			));
-		}
-
-		else if (/default[\s\n]/.test(str.slice(i, i + 8))) {
-			exportDeclarations.push(exportDefaultDeclaration(
-				str,
-				start,
-				declarationStart
-			));
-		}
-
-		else {
-			exportDeclarations.push(exportDecl(
-				str,
-				start,
-				declarationStart
-			));
-		}
 
 		return base;
 	}
