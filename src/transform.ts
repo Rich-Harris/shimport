@@ -514,21 +514,20 @@ export function transform(source: string, id: string) {
 
 	importDeclarations.forEach(d => {
 		if (nameBySource.has(d.source)) return;
-		nameBySource.set(d.source, d.name || `__import_${nameBySource.size}`);
+		nameBySource.set(d.source, d.name || `__dep_${nameBySource.size}`);
 	});
 
 	exportDeclarations.forEach(d => {
 		if (!d.source) return;
 		if (nameBySource.has(d.source)) return;
-		nameBySource.set(d.source, d.name || `__import_${nameBySource.size}`);
+		nameBySource.set(d.source, d.name || `__dep_${nameBySource.size}`);
 	});
 
 	const deps = Array.from(nameBySource.keys())
 		.map(s => `'${s}'`)
 		.join(', ');
 
-	const names = Array.from(nameBySource.values())
-		.concat('__exports')
+	const names = ['__import', '__exports'].concat(Array.from(nameBySource.values()))
 		.join(', ');
 
 	let transformed = `__shimport__.load('${id}', [${deps}], function(${names}){ `;
