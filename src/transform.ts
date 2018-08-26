@@ -350,19 +350,23 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 		'e': (i: number) => {
 			if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
 			return base;
+		},
+
+		'+': (i: number) => {
+			pfixOp = (!pfixOp && str[i - 1] === '+');
+			return base;
+		},
+
+		'-': (i: number) => {
+			pfixOp = (!pfixOp && str[i - 1] === '-');
+			return base;
 		}
 	}
 
 	function base(char: string, i: number): State {
 		if (char in handlers) return handlers[char](i);
 
-		if (char === '+' && !pfixOp && str[i - 1] === '+') {
-			pfixOp = true;
-		} else if (char === '-' && !pfixOp && str[i - 1] === '-') {
-			pfixOp = true;
-		} else {
-			pfixOp = false;
-		}
+		pfixOp = false;
 
 		if (!isWhitespace(char)) {
 			lsci = i;
