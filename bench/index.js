@@ -1,8 +1,9 @@
 const fs = require('fs');
 const ms = require('pretty-ms');
 const c = require('kleur');
+const { locate } = require('locate-character');
 
-const shimport = `(function() { ${fs.readFileSync('index.js', 'utf-8')}; return __shimport__; }())`;
+const shimport = `(function() { ${fs.readFileSync('index.dev.js', 'utf-8')}; return __shimport__; }())`;
 
 const n = 25;
 
@@ -30,12 +31,19 @@ function test(file) {
 	}
 
 	const firstRun = run(code, file);
-	console.log(`> Cold: ${c.bold.green(ms(firstRun))}`);
 
 	if (firstRun === null) {
+		const match = /Error parsing module at character (\d+)/.exec(err.message);
+		if (match) {
+			const { line, column } = locate(code, +match[1]);
+			err.message += ` (${line}:${column})`;
+		}
 		console.log(c.bold.red(err.message));
+		console.log(err.stack);
 		return;
 	}
+
+	console.log(`> Cold: ${c.bold.green(ms(firstRun))}`);
 
 	// warm up
 	let i = n;
@@ -48,12 +56,13 @@ function test(file) {
 
 	const avg = total / n;
 	console.log(`> Warm: ${c.bold.green(ms(avg))} (average of ${n} runs)`);
-
 }
 
-fs.readdirSync('bench/samples').forEach(file => {
-	console.log('');
-	test(`bench/samples/${file}`);
-});
+let files = process.argv.slice(2);
+if (files.length === 0) {
+	files = fs.readdirSync('bench/samples').map(f => `bench/samples/${f}`);
+}
+
+files.forEach(test);
 
 console.log('');
