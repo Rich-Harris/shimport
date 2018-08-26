@@ -268,8 +268,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 	const stack: State[] = [];
 
-	let start: number;
-
 	let lsci = -1; // last significant character index
 	const lsc = () => str[lsci];
 
@@ -319,39 +317,28 @@ function find(str: string): [Range[], Range[], Range[]] {
 			},
 
 			// }
-
 			(i: number) => {
 				lsci = i;
-				return (start = i + 1), stack.pop();
+				return stack.pop();
 			},
 
 			// "
 			(i: number) => {
-				start = i + 1;
-				quote = '"';
 				stack.push(base);
 				return double_quoted;
 			},
 
 			// '
 			(i: number) => {
-				start = i + 1;
-				quote = "'";
 				stack.push(base);
 				return single_quoted;
 			},
 
 			// //
-			(i: number) => {
-				start = i;
-				return line_comment;
-			},
+			(i: number) => line_comment,
 
 			// /*
-			(i: number) => {
-				start = i;
-				return block_comment;
-			},
+			(i: number) => block_comment,
 
 			// /
 			(i: number) => {
@@ -387,15 +374,11 @@ function find(str: string): [Range[], Range[], Range[]] {
 					regexEnabled = true;
 				}
 
-				start = i;
 				return slash;
 			},
 
 			// `
-			(i: number) => {
-				start = i + 1;
-				return template_string;
-			},
+			(i: number) => template_string,
 
 			// import
 			(i: number) => {
@@ -437,19 +420,13 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 		handlers: [
 			// [
-			(i: number) => {
-				return regexEnabled ? ((start = i), regex_character) : base;
-			},
+			(i: number) => regexEnabled ? regex_character : base,
 
 			// \\
-			(i: number) => {
-				return (start = i), (escapedFrom = regex), escaped;
-			},
+			(i: number) => ((escapedFrom = regex), escaped),
 
 			// anything else
-			(i: number) => {
-				return regexEnabled && !pfixOp ? ((start = i), regex) : base;
-			}
+			(i: number) => regexEnabled && !pfixOp ? regex : base
 		]
 	};
 
