@@ -52,6 +52,20 @@ class ImportDeclaration implements Range {
 	}
 }
 
+class ImportStatement implements Range {
+	start: number;
+	end: number;
+
+	constructor(start: number, end: number) {
+		this.start = start;
+		this.end = end;
+	}
+
+	toString() {
+		return '__import';
+	}
+}
+
 class ExportDefaultDeclaration implements Range {
 	str: string;
 	start: number;
@@ -191,7 +205,7 @@ function processSpecifiers(str: string) {
 	});
 }
 
-function find(str: string): [ImportDeclaration[], Range[]] {
+function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 	let quote: string;
 	let escapedFrom: State;
 	let regexEnabled = true;
@@ -210,6 +224,7 @@ function find(str: string): [ImportDeclaration[], Range[]] {
 	var parenDepth = 0;
 
 	const importDeclarations: ImportDeclaration[] = [];
+	const importStatements: ImportStatement[] = [];
 	const exportDeclarations: Range[] = [];
 
 	function tokenClosesExpression() {
@@ -310,7 +325,7 @@ function find(str: string): [ImportDeclaration[], Range[]] {
 
 		if (char === 'i') {
 			if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
-			if (str.slice(i, i + 7) === 'import(') return importStatement;
+			if (str.slice(i, i + 7) === 'import(') return importStatement(i);
 		}
 
 		if (char === 'e') {
@@ -346,8 +361,13 @@ function find(str: string): [ImportDeclaration[], Range[]] {
 		return base;
 	}
 
-	function importStatement(char: string, i: number): State {
-		throw new Error(`TODO import statements`);
+	function importStatement(i: number): State {
+		importStatements.push(new ImportStatement(
+			i,
+			i += 6
+		));
+
+		return base;
 	}
 
 	function exportDeclaration(i: number): State {
@@ -504,11 +524,11 @@ function find(str: string): [ImportDeclaration[], Range[]] {
 		state('\n', str.length);
 	}
 
-	return [importDeclarations, exportDeclarations];
+	return [importDeclarations, importStatements, exportDeclarations];
 }
 
 export function transform(source: string, id: string) {
-	const [importDeclarations, exportDeclarations] = find(source);
+	const [importDeclarations, importStatements, exportDeclarations] = find(source);
 
 	const nameBySource = new Map();
 
@@ -532,7 +552,11 @@ export function transform(source: string, id: string) {
 
 	let transformed = `__shimport__.load('${id}', [${deps}], function(${names}){ `;
 
-	const ranges: any[] = [...importDeclarations, ...exportDeclarations];
+	const ranges: any[] = [
+		...importDeclarations,
+		...importStatements,
+		...exportDeclarations
+	].sort((a, b) => a.start - b.start);
 
 	let c = 0;
 
