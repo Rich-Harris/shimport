@@ -1,1 +1,0 @@
-export const something = 'this is an export from a module that was loaded statically';
