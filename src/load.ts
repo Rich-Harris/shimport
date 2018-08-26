@@ -30,7 +30,7 @@ export function load(url: string) {
 	if (!promises[url]) {
 		promises[url] = fetch(url).then(r => r.text()).then(text => {
 			const transformed = transform(text, url);
-			return new Function(`return ${transformed}`)();
+			return alert(transformed);
 		});
 	}
 

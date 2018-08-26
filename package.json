@@ -4,18 +4,16 @@
   "version": "0.0.2",
   "repository": "Rich-Harris/shimport",
   "main": "index.js",
-  "types": "types/index.d.ts",
-  "files": [
-    "dist",
-    "types"
-  ],
   "devDependencies": {
     "@ampproject/rollup-plugin-closure-compiler": "^0.6.1",
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.53",
     "glob": "^7.1.2",
+    "kleur": "^2.0.1",
     "mocha": "^4.0.1",
+    "pretty-ms": "^3.2.0",
     "rollup": "^0.52.0",
+    "rollup-plugin-filesize": "^4.0.1",
     "rollup-plugin-terser": "^1.0.1",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-virtual": "^1.0.1",
@@ -25,8 +23,7 @@
   },
   "scripts": {
     "dev": "rollup -cw",
-    "build-declarations": "tsc -d && node scripts/move-type-declarations.js",
-    "build": "npm run build-declarations && rollup -c",
+    "build": "rollup -c",
     "test": "mocha --opts mocha.opts",
     "prepublishOnly": "npm test && npm run build"
   },
