@@ -28,23 +28,25 @@ class ImportDeclaration implements Range {
 		this.source = source;
 
 		const hint = specifiers.find(s => s.name === '*' || s.name === 'default');
-		this.name = hint ? hint.as : `__import_${index}`;
+		this.name = hint && hint.as;
+	}
 
-		this.assignments = specifiers
+	toString(nameBySource: Map<string, string>) {
+		const name = nameBySource.get(this.source);
+
+		const assignments = this.specifiers
 			.sort((a, b) => {
 				if (a.name === 'default') return 1;
 				if (b.name === 'default') return -1;
 			})
 			.map(s => {
 				if (s.name === '*') return null;
-				if (s.name === 'default') return `${s.as} = ${this.name}.default;`;
-				return `var ${s.as} = ${this.name}.${s.name};`;
+				if (s.name === 'default') return `${s.as} = ${name}.default;`;
+				return `var ${s.as} = ${name}.${s.name};`;
 			});
-	}
 
-	toString() {
 		return (
-			this.assignments.join(' ') + ' /*' +
+			assignments.join(' ') + ' /*' +
 			this.str.slice(this.start, this.end) + '*/'
 		).trim();
 	}
@@ -88,10 +90,12 @@ class ExportSpecifiersDeclaration implements Range {
 		this.specifiers = processSpecifiers(str.slice(specifiersStart + 1, specifiersEnd - 1).trim());
 	}
 
-	toString() {
+	toString(nameBySource: Map<string, string>) {
+		const name = nameBySource.get(this.source);
+
 		return this.specifiers
 			.map(s => {
-				return `__exports.${s.as} = ${s.name};`;
+				return `__exports.${s.as} = ${name ? `${name}.${s.name}` : s.name};`;
 			})
 			.join(' ') + ` /*${this.str.slice(this.start, this.end)}*/`
 	}
@@ -504,18 +508,28 @@ function find(str: string): [ImportDeclaration[], Range[]] {
 }
 
 export function transform(source: string, id: string) {
-	const imports = [];
-
 	const [importDeclarations, exportDeclarations] = find(source);
 
-	// TODO dedupe imports
+	const nameBySource = new Map();
 
-	const sources = importDeclarations.map(x => x.source);
+	importDeclarations.forEach(d => {
+		if (nameBySource.has(d.source)) return;
+		nameBySource.set(d.source, d.name || `__import_${nameBySource.size}`);
+	});
 
-	// TODO account for dynamic imports
+	exportDeclarations.forEach(d => {
+		if (!d.source) return;
+		if (nameBySource.has(d.source)) return;
+		nameBySource.set(d.source, d.name || `__import_${nameBySource.size}`);
+	});
 
-	const deps = importDeclarations.map(d => `'${d.source}'`).join(', ');
-	const names = importDeclarations.map(d => d.name).concat('__exports').join(', ');
+	const deps = Array.from(nameBySource.keys())
+		.map(s => `'${s}'`)
+		.join(', ');
+
+	const names = Array.from(nameBySource.values())
+		.concat('__exports')
+		.join(', ');
 
 	let transformed = `__shimport__.load('${id}', [${deps}], function(${names}){ `;
 
@@ -527,7 +541,7 @@ export function transform(source: string, id: string) {
 		const range = ranges[i];
 		transformed += (
 			source.slice(c, range.start) +
-			range.toString()
+			range.toString(nameBySource)
 		);
 
 		c = range.end;

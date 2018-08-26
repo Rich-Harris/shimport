@@ -1,2 +1,2 @@
-__shimport__.load('./export-from/input.js', [], function(__exports){ __exports.foo = foo; /*export { foo } from './foo.js'*/;
+__shimport__.load('./export-from/input.js', ['./foo.js'], function(__import_0, __exports){ __exports.foo = __import_0.foo; /*export { foo } from './foo.js'*/;
 });
