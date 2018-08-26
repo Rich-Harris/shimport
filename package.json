@@ -1,7 +1,7 @@
 {
   "name": "shimport",
   "description": "Shim for dynamic import()",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "repository": "Rich-Harris/shimport",
   "main": "index.js",
   "types": "types/index.d.ts",
@@ -20,7 +20,7 @@
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-virtual": "^1.0.1",
     "sander": "^0.6.0",
-    "sirv-cli": "^0.2.0",
+    "serve": "^10.0.0",
     "ts-node": "^3.3.0",
     "typescript": "^2.6.2"
   },
@@ -30,7 +30,7 @@
     "build": "npm run build-declarations && rollup -c",
     "test": "mocha --opts mocha.opts",
     "prepublishOnly": "npm test && npm run build",
-    "demo": "sirv -d . & open http://localhost:5000"
+    "demo": "serve demo & open http://localhost:5000"
   },
   "license": "LIL"
 }
