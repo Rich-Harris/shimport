@@ -20,7 +20,6 @@
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-virtual": "^1.0.1",
     "sander": "^0.6.0",
-    "serve": "^10.0.0",
     "ts-node": "^3.3.0",
     "typescript": "^2.6.2"
   },
@@ -29,8 +28,7 @@
     "build-declarations": "tsc -d && node scripts/move-type-declarations.js",
     "build": "npm run build-declarations && rollup -c",
     "test": "mocha --opts mocha.opts",
-    "prepublishOnly": "npm test && npm run build",
-    "demo": "serve demo & open http://localhost:5000"
+    "prepublishOnly": "npm test && npm run build"
   },
   "license": "LIL"
 }
