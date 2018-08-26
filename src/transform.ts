@@ -1,4 +1,8 @@
-type State = (char: string, i: number) => State;
+type State = {
+	name?: string;
+	pattern: RegExp;
+	handlers: Array<(i?: number, token?: string) => State | void>
+};
 
 type Specifier = {
 	name: string;
@@ -271,7 +275,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	const stack: State[] = [];
 
 	let start: number;
-	let state = base;
 
 	let lsci = -1; // last significant character index
 	const lsc = () => str[lsci];
@@ -299,224 +302,315 @@ function find(str: string): [Range[], Range[], Range[]] {
 		return true;
 	}
 
-	const handlers: Record<string, (i: number) => State> = {
-		'(': (i: number) => {
-			lsci = i;
-			openingParenPositions[parenDepth++] = i;
-			return base;
-		},
+	const base: State = {
+		name: 'base',
 
-		')': (i: number) => {
-			lsci = i;
-			parenMatches[i] = openingParenPositions[--parenDepth];
-			return base;
-		},
+		pattern: /(?:(\()|(\))|({)|(})|(")|(')|(\/\/)|(\/\*)|(\/)|(`)|(import)|(export)|(\+\+|--))/g,
 
-		'{': (i: number) => {
-			lsci = i;
-			stack.push(base);
-			return base;
-		},
+		handlers: [
+			// (
+			(i: number) => {
+				lsci = i;
+				openingParenPositions[parenDepth++] = i;
+			},
 
-		'}': (i: number) => {
-			lsci = i;
-			return (start = i + 1), stack.pop();
-		},
+			// )
+			(i: number) => {
+				lsci = i;
+				parenMatches[i] = openingParenPositions[--parenDepth];
+			},
 
-		'"': (i: number) => {
-			start = i + 1;
-			quote = '"';
-			stack.push(base);
-			return string;
-		},
+			// {
+			(i: number) => {
+				lsci = i;
+				stack.push(base);
+			},
 
-		"'": (i: number) => {
-			start = i + 1;
-			quote = "'";
-			stack.push(base);
-			return string;
-		},
+			// }
 
-		'/': (i: number) => {
-			// could be start of regex literal OR division punctuator. Solution via
-			// http://stackoverflow.com/questions/5519596/when-parsing-javascript-what-determines-the-meaning-of-a-slash/27120110#27120110
+			(i: number) => {
+				lsci = i;
+				return (start = i + 1), stack.pop();
+			},
 
-			var b = i;
-			while (b > 0 && isWhitespace(str[b - 1])) {
-				b -= 1;
-			}
+			// "
+			(i: number) => {
+				start = i + 1;
+				quote = '"';
+				stack.push(base);
+				return double_quoted;
+			},
 
-			if (b > 0) {
-				var a = b;
+			// '
+			(i: number) => {
+				start = i + 1;
+				quote = "'";
+				stack.push(base);
+				return single_quoted;
+			},
 
-				if (punctuatorChars.test(str[a - 1])) {
-					while (a > 0 && punctuatorChars.test(str[a - 1])) {
-						a -= 1;
+			// //
+			(i: number) => {
+				start = i;
+				return line_comment;
+			},
+
+			// /*
+			(i: number) => {
+				start = i;
+				return block_comment;
+			},
+
+			// /
+			(i: number) => {
+				// could be start of regex literal OR division punctuator. Solution via
+				// http://stackoverflow.com/questions/5519596/when-parsing-javascript-what-determines-the-meaning-of-a-slash/27120110#27120110
+
+				var b = i;
+				while (b > 0 && isWhitespace(str[b - 1])) {
+					b -= 1;
+				}
+
+				if (b > 0) {
+					var a = b;
+
+					if (punctuatorChars.test(str[a - 1])) {
+						while (a > 0 && punctuatorChars.test(str[a - 1])) {
+							a -= 1;
+						}
+					} else {
+						while (a > 0 && keywordChars.test(str[a - 1])) {
+							a -= 1;
+						}
 					}
+
+					var token = str.slice(a, b);
+
+					regexEnabled = token
+						? keywords.test(token) ||
+						  punctuators.test(token) ||
+						  (ambiguous.test(token) && !tokenClosesExpression())
+						: false;
 				} else {
-					while (a > 0 && keywordChars.test(str[a - 1])) {
-						a -= 1;
+					regexEnabled = true;
+				}
+
+				start = i;
+				return slash;
+			},
+
+			// `
+			(i: number) => {
+				start = i + 1;
+				return template_string;
+			},
+
+			// import
+			(i: number) => {
+				if (i === 0 || isWhitespace(str[i - 1])) {
+					if (/import[\s\n]/.test(str.slice(i, i + 7))) {
+						const d = getImportDeclaration(str, i);
+						importDeclarations.push(d);
+						p = d.end;
+					}
+
+					else if (str.slice(i, i + 7) === 'import(') {
+						const s = getImportStatement(i);
+						importStatements.push(s);
+						p = s.end;
 					}
 				}
+			},
 
-				var token = str.slice(a, b);
+			// export
+			(i: number) => {
+				if (i === 0 || isWhitespace(str[i - 1])) {
+					if (/export[\s\n]/.test(str.slice(i, i + 7))) {
+						const d = getExportDeclaration(str, i);
+						exportDeclarations.push(d);
+						p = d.end;
+					}
+				}
+			},
 
-				regexEnabled = token
-					? keywords.test(token) ||
-					  punctuators.test(token) ||
-					  (ambiguous.test(token) && !tokenClosesExpression())
-					: false;
-			} else {
-				regexEnabled = true;
+			// ++/--
+			(i: number) => {
+				pfixOp = (!pfixOp && str[i - 1] === '+');
+			}
+		]
+	};
+
+	const slash: State = {
+		name: 'slash',
+
+		pattern: /(?:(\[)|(\\)|(.))/g,
+
+		handlers: [
+			// [
+			(i: number) => {
+				return regexEnabled ? ((start = i), regex_character) : base;
+			},
+
+			// \\
+			(i: number) => {
+				return (start = i), (escapedFrom = regex), escaped;
+			},
+
+			// anything else
+			(i: number) => {
+				return regexEnabled && !pfixOp ? ((start = i), regex) : base;
+			}
+		]
+	};
+
+	const regex: State = {
+		name: 'regex',
+
+		pattern: /(?:(\[)|(\\)|(\/))/g,
+
+		handlers: [
+			// [
+			() => regex_character,
+
+			// \\
+			() => ((escapedFrom = regex), escaped),
+
+			// /
+			() => base
+		]
+	};
+
+	const regex_character: State = {
+		name: 'regex_character',
+
+		pattern: /(?:(\])|(\\))/g,
+
+		handlers: [
+			// ]
+			() => regex,
+
+			// \\
+			() => ((escapedFrom = regex_character), escaped)
+		]
+	};
+
+	const double_quoted: State = {
+		name: 'double_quoted',
+
+		pattern: /(?:(\\)|("))/g,
+
+		handlers: [
+			// \\
+			() => ((escapedFrom = double_quoted), escaped),
+
+			// "
+			() => stack.pop()
+		]
+	};
+
+	const single_quoted: State = {
+		name: 'single_quoted',
+
+		pattern: /(?:(\\)|('))/g,
+
+		handlers: [
+			// \\
+			() => ((escapedFrom = single_quoted), escaped),
+
+			// '
+			() => stack.pop()
+		]
+	};
+
+	const escaped: State = {
+		name: 'escaped',
+
+		pattern: /(.)/g,
+
+		handlers: [
+			() => escapedFrom
+		]
+	};
+
+	const template_string: State = {
+		name: 'template_string',
+
+		pattern: /(?:(\$)|(\\)|(`))/g,
+
+		handlers: [
+			// $
+			() => template_string_dollar,
+
+			// \\
+			() => ((escapedFrom = template_string), escaped),
+
+			// `
+			() => base
+		]
+	};
+
+	const template_string_dollar: State = {
+		name: 'template_string_dollar',
+
+		pattern: /({)/g,
+
+		handlers: [
+			// {
+			() => {
+				stack.push(template_string);
+				return base;
+			},
+
+			() => template_string
+		]
+	};
+
+	const line_comment = {
+		name: 'line_comment',
+
+		pattern: /((?:\n|$))/g,
+
+		handlers: [
+			// \n
+			() => base
+		]
+	};
+
+	const block_comment = {
+		name: 'block_comment',
+
+		pattern: /(\*\/)/g,
+
+		handlers: [
+			// \n
+			() => base
+		]
+	};
+
+	let state = base;
+
+	let p = 0;
+
+	while (p < str.length) {
+		state.pattern.lastIndex = p;
+		const match = state.pattern.exec(str);
+
+		if (!match) {
+			if (stack.length > 0 || state !== base) {
+				throw new Error(`Unexpected end of file`);
 			}
 
-			start = i;
-			return slash;
-		},
+			break;
+		}
 
-		'`': (i: number) => {
-			start = i + 1;
-			return templateString;
-		},
+		p = match.index + match[0].length;
 
-		'i': (i: number) => {
-			if (i === 0 || isWhitespace(str[i - 1])) {
-				if (/import[\s\n]/.test(str.slice(i, i + 7))) {
-					importDeclarations.push(getImportDeclaration(str, i));
-				}
-
-				else if (str.slice(i, i + 7) === 'import(') {
-					importStatements.push(getImportStatement(i));
-				}
+		for (let j = 1; j < match.length; j += 1) {
+			if (match[j]) {
+				state = state.handlers[j - 1](match.index) || state;
+				break;
 			}
-			return base;
-		},
-
-		'e': (i: number) => {
-			if (i === 0 || isWhitespace(str[i - 1])) {
-				if (str.slice(i, i + 7) === 'export ') {
-					exportDeclarations.push(getExportDeclaration(str, i));
-				}
-			}
-
-			return base;
-		},
-
-		'+': (i: number) => {
-			pfixOp = (!pfixOp && str[i - 1] === '+');
-			return base;
-		},
-
-		'-': (i: number) => {
-			pfixOp = (!pfixOp && str[i - 1] === '-');
-			return base;
 		}
-	}
-
-	function base(char: string, i: number): State {
-		if (char in handlers) return handlers[char](i);
-
-		if (!isWhitespace(char)) lsci = i;
-		pfixOp = false;
-
-		return base;
-	}
-
-	function slash(char: string, i: number) {
-		if (char === '/') {
-			return (start = i + 1), lineComment;
-		}
-		if (char === '*') {
-			return (start = i + 1), blockComment;
-		}
-		if (char === '[') {
-			return regexEnabled ? ((start = i), regexCharacter) : base;
-		}
-		if (char === '\\') {
-			return (start = i), (escapedFrom = regex), escaped;
-		}
-		return regexEnabled && !pfixOp ? ((start = i), regex) : base;
-	}
-
-	function regex(char: string, i: number): State {
-		if (char === '[') {
-			return regexCharacter;
-		}
-		if (char === '\\') {
-			return (escapedFrom = regex), escaped;
-		}
-
-		if (char === '/') {
-			return base;
-		}
-
-		return regex;
-	}
-
-	function regexCharacter(char: string): State {
-		if (char === ']') {
-			return regex;
-		}
-		if (char === '\\') {
-			return (escapedFrom = regexCharacter), escaped;
-		}
-		return regexCharacter;
-	}
-
-	function string(char: string, i: number): State {
-		if (char === '\\') {
-			return (escapedFrom = string), escaped;
-		}
-		if (char === quote) {
-			return stack.pop();
-		}
-
-		return string;
-	}
-
-	function escaped() {
-		return escapedFrom;
-	}
-
-	function templateString(char: string, i: number): State {
-		if (char === '$') templateStringDollar;
-		if (char === '\\') return (escapedFrom = templateString), escaped;
-		if (char === '`') return base;
-
-		return templateString;
-	}
-
-	function templateStringDollar(char: string, i: number) {
-		if (char === '{') {
-			stack.push(templateString);
-			return base;
-		}
-		return templateString(char, i);
-	}
-
-	function lineComment(char: string): State {
-		return (char === '\n') ? base : lineComment;
-	}
-
-	function blockComment(char: string): State {
-		return (char === '*') ? blockCommentEnding : blockComment;
-	}
-
-	function blockCommentEnding(char: string) {
-		return (char === '/') ? base : blockComment(char);
-	}
-
-	for (var i = 0; i < str.length; i += 1) {
-		if (!state) {
-			throw new Error(`Error parsing module at character ${i}`);
-		}
-
-		state = state(str[i], i);
-	}
-
-	// cheeky hack
-	if (state.name === 'lineComment') {
-		state('\n', str.length);
 	}
 
 	return [importDeclarations, importStatements, exportDeclarations];
