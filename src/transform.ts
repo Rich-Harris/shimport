@@ -219,7 +219,7 @@ function processImportSpecifiers(str: string): Specifier[] {
 
 function processSpecifiers(str: string) {
 	return str.split(',').map(part => {
-		const [name, , as] = part.split(/[^\S]+/);
+		const [name, , as] = part.trim().split(/[^\S]+/);
 		return { name, as: as || name };
 	});
 }
