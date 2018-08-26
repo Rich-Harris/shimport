@@ -261,13 +261,7 @@ function getExportDeclaration(str: string, i: number) {
 	);
 }
 
-type Line = {
-	i: number;
-	str: string;
-};
-
 function find(str: string): [Range[], Range[], Range[]] {
-	let quote: string;
 	let escapedFrom: State;
 	let regexEnabled = true;
 	let pfixOp = false;
@@ -303,8 +297,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	}
 
 	const base: State = {
-		name: 'base',
-
 		pattern: /(?:(\()|(\))|({)|(})|(")|(')|(\/\/)|(\/\*)|(\/)|(`)|(import)|(export)|(\+\+|--))/g,
 
 		handlers: [
@@ -441,8 +433,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const slash: State = {
-		name: 'slash',
-
 		pattern: /(?:(\[)|(\\)|(.))/g,
 
 		handlers: [
@@ -464,8 +454,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const regex: State = {
-		name: 'regex',
-
 		pattern: /(?:(\[)|(\\)|(\/))/g,
 
 		handlers: [
@@ -481,8 +469,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const regex_character: State = {
-		name: 'regex_character',
-
 		pattern: /(?:(\])|(\\))/g,
 
 		handlers: [
@@ -495,8 +481,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const double_quoted: State = {
-		name: 'double_quoted',
-
 		pattern: /(?:(\\)|("))/g,
 
 		handlers: [
@@ -509,8 +493,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const single_quoted: State = {
-		name: 'single_quoted',
-
 		pattern: /(?:(\\)|('))/g,
 
 		handlers: [
@@ -523,8 +505,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const escaped: State = {
-		name: 'escaped',
-
 		pattern: /(.)/g,
 
 		handlers: [
@@ -533,8 +513,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const template_string: State = {
-		name: 'template_string',
-
 		pattern: /(?:(\$)|(\\)|(`))/g,
 
 		handlers: [
@@ -550,8 +528,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const template_string_dollar: State = {
-		name: 'template_string_dollar',
-
 		pattern: /({)/g,
 
 		handlers: [
@@ -566,8 +542,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const line_comment = {
-		name: 'line_comment',
-
 		pattern: /((?:\n|$))/g,
 
 		handlers: [
@@ -577,8 +551,6 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const block_comment = {
-		name: 'block_comment',
-
 		pattern: /(\*\/)/g,
 
 		handlers: [
