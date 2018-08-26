@@ -550,7 +550,7 @@ export function transform(source: string, id: string) {
 	const names = ['__import', '__exports'].concat(Array.from(nameBySource.values()))
 		.join(', ');
 
-	let transformed = `__shimport__.load('${id}', [${deps}], function(${names}){ `;
+	let transformed = `__shimport__.define('${id}', [${deps}], function(${names}){ `;
 
 	const ranges: any[] = [
 		...importDeclarations,

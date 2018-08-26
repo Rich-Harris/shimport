@@ -1,0 +1,1 @@
+export const somethingElse = 'this is an export from a module that was loaded dynamically';

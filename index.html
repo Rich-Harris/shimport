@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Shimport demo</title>
+</head>
+<body>
+	<h1>Shimport demo</h1>
+
+	<script>
+		var __s = document.createElement('script');
+		try {
+			new Function('import()');
+			__s.type = 'module';
+			__s.src = 'main.js';
+		} catch (e) {
+			__s.src = 'dist/shimport.js'
+			__s.dataset.main = 'demo/main.js';
+		}
+
+		document.head.appendChild(__s);
+	</script>
+</body>
+</html>

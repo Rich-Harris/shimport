@@ -1,32 +1,36 @@
 {
-  "name": "TODO",
-  "description": "TODO",
+  "name": "shimport",
+  "description": "Shim for dynamic import()",
   "version": "1.0.0",
-  "repository": "Rich-Harris/TODO",
-  "main": "dist/TODO.umd.js",
-  "module": "dist/TODO.esm.js",
+  "repository": "Rich-Harris/shimport",
+  "main": "dist/shimport.js",
   "types": "types/index.d.ts",
   "files": [
     "dist",
-	  "types"
+    "types"
   ],
   "devDependencies": {
+    "@ampproject/rollup-plugin-closure-compiler": "^0.6.1",
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.53",
     "glob": "^7.1.2",
     "mocha": "^4.0.1",
     "rollup": "^0.52.0",
+    "rollup-plugin-terser": "^1.0.1",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-virtual": "^1.0.1",
     "sander": "^0.6.0",
+    "sirv-cli": "^0.2.0",
     "ts-node": "^3.3.0",
     "typescript": "^2.6.2"
   },
   "scripts": {
+    "dev": "rollup -cw",
     "build-declarations": "tsc -d && node scripts/move-type-declarations.js",
     "build": "npm run build-declarations && rollup -c",
     "test": "mocha --opts mocha.opts",
-    "prepublishOnly": "npm test && npm run build"
+    "prepublishOnly": "npm test && npm run build",
+    "demo": "sirv -d . & open http://localhost:5000"
   },
   "license": "LIL"
 }
