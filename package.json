@@ -4,6 +4,10 @@
   "version": "0.0.3",
   "repository": "Rich-Harris/shimport",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "index.dev.js"
+  ],
   "devDependencies": {
     "@ampproject/rollup-plugin-closure-compiler": "^0.6.1",
     "@types/mocha": "^2.2.44",
