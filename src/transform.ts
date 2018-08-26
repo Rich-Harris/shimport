@@ -261,40 +261,45 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 		return true;
 	}
 
-	function base(char: string, i: number): State {
-		// the order of these tests is based on which characters are
-		// typically more prevalent in a codebase
-		if (char === '(') {
+	const handlers: Record<string, (i: number) => State> = {
+		'(': (i: number) => {
 			lsci = i;
 			openingParenPositions[parenDepth++] = i;
 			return base;
-		}
+		},
 
-		if (char === ')') {
+		')': (i: number) => {
 			lsci = i;
 			parenMatches[i] = openingParenPositions[--parenDepth];
 			return base;
-		}
+		},
 
-		if (char === '{') {
+		'{': (i: number) => {
 			lsci = i;
 			stack.push(base);
 			return base;
-		}
+		},
 
-		if (char === '}') {
+		'}': (i: number) => {
 			lsci = i;
 			return (start = i + 1), stack.pop();
-		}
+		},
 
-		if (char === '"' || char === "'") {
+		'"': (i: number) => {
 			start = i + 1;
-			quote = char;
+			quote = '"';
 			stack.push(base);
 			return string;
-		}
+		},
 
-		if (char === '/') {
+		"'": (i: number) => {
+			start = i + 1;
+			quote = "'";
+			stack.push(base);
+			return string;
+		},
+
+		'/': (i: number) => {
 			// could be start of regex literal OR division punctuator. Solution via
 			// http://stackoverflow.com/questions/5519596/when-parsing-javascript-what-determines-the-meaning-of-a-slash/27120110#27120110
 
@@ -329,21 +334,27 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 
 			start = i;
 			return slash;
-		}
+		},
 
-		if (char === '`') {
+		'`': (i: number) => {
 			start = i + 1;
 			return templateString;
-		}
+		},
 
-		if (char === 'i') {
+		'i': (i: number) => {
 			if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
 			if (str.slice(i, i + 7) === 'import(') return importStatement(i);
-		}
+			return base;
+		},
 
-		if (char === 'e') {
+		'e': (i: number) => {
 			if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
+			return base;
 		}
+	}
+
+	function base(char: string, i: number): State {
+		if (char in handlers) return handlers[char](i);
 
 		if (char === '+' && !pfixOp && str[i - 1] === '+') {
 			pfixOp = true;
