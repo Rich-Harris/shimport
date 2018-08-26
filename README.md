@@ -91,11 +91,20 @@ __shimport__.load(href).then(mod => {
 ```
 
 
+## Is it fast?
+
+Blazingly. The code transformation is fast enough that you probalby don't need to worry about it, unless you're shipping far too much JavaScript in the first place.
+
+A future version of Shimport may use web workers to do the transformation off the main thread.
+
+
 ## Caveats
 
 The JavaScript module specification is complex, and extremely hard to implement completely with the techniques Shimport uses. It is designed to meet the 98% of cases you encounter in the real world, rather than covering the entire spec at the cost of becoming prohibitively slow and complex.
 
 Specifically, it will not correctly handle cyclical dependencies or live bindings.
+
+Because Shimport uses `fetch`, and evaluates the transformed result, it will not work with some CSP and CORS configurations.
 
 
 
