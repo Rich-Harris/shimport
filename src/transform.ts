@@ -11,154 +11,109 @@ interface Range {
 	[key: string]: any;
 }
 
-class ImportDeclaration implements Range {
-	str: string;
-	start: number;
-	end: number;
-	specifiers: Specifier[];
-	source: string;
-	name: string;
-	assignments: string[];
+function importDecl(str: string, start: number, end: number, specifiers: Specifier[], source: string, index: number) {
+	const hint = specifiers.find(s => s.name === '*' || s.name === 'default');
+	const name = hint && hint.as;
 
-	constructor(str: string, start: number, end: number, specifiers: Specifier[], source: string, index: number) {
-		this.str = str;
-		this.start = start;
-		this.end = end;
-		this.specifiers = specifiers;
-		this.source = source;
+	return {
+		start,
+		end,
+		source,
+		name,
+		toString(nameBySource: Map<string, string>) {
+			const name = nameBySource.get(source);
 
-		const hint = specifiers.find(s => s.name === '*' || s.name === 'default');
-		this.name = hint && hint.as;
-	}
+			const assignments = specifiers
+				.sort((a, b) => {
+					if (a.name === 'default') return 1;
+					if (b.name === 'default') return -1;
+				})
+				.map(s => {
+					if (s.name === '*') return null;
+					if (s.name === 'default') return `${s.as} = ${name}.default;`;
+					return `var ${s.as} = ${name}.${s.name};`;
+				});
 
-	toString(nameBySource: Map<string, string>) {
-		const name = nameBySource.get(this.source);
-
-		const assignments = this.specifiers
-			.sort((a, b) => {
-				if (a.name === 'default') return 1;
-				if (b.name === 'default') return -1;
-			})
-			.map(s => {
-				if (s.name === '*') return null;
-				if (s.name === 'default') return `${s.as} = ${name}.default;`;
-				return `var ${s.as} = ${name}.${s.name};`;
-			});
-
-		return (
-			assignments.join(' ') + ' /*' +
-			this.str.slice(this.start, this.end) + '*/'
-		).trim();
-	}
+			return (
+				assignments.join(' ') + ' /*' +
+				str.slice(start, end) + '*/'
+			).trim();
+		}
+	};
 }
 
-class ImportStatement implements Range {
-	start: number;
-	end: number;
-
-	constructor(start: number, end: number) {
-		this.start = start;
-		this.end = end;
-	}
-
-	toString() {
-		return '__import';
-	}
+function importStmt(start: number, end: number) {
+	return {
+		start,
+		end,
+		toString() {
+			return '__import'
+		}
+	};
 }
 
-class ExportDefaultDeclaration implements Range {
-	str: string;
-	start: number;
-	end: number;
+function exportDefaultDeclaration(str: string, start: number, end: number) {
+	while (/\S/.test(str[end])) end += 1;
 
-	constructor(str: string, start: number, end: number) {
-		this.str = str;
-		this.start = start;
-
-		while (/\S/.test(str[end])) end += 1;
-		this.end = end;
-	}
-
-	toString() {
-		return `__exports.default =`;
-	}
+	return {
+		start,
+		end,
+		toString() {
+			return `__exports.default =`;
+		}
+	};
 }
 
-class ExportSpecifiersDeclaration implements Range {
-	str: string;
-	start: number;
-	specifiersStart: number;
-	specifiersEnd: number;
-	end: number;
-	source: string;
-	specifiers: Specifier[];
+function exportSpecifiersDeclaration(str: string, start: number, specifiersStart: number, specifiersEnd: number, end: number, source: string) {
+	const specifiers = processSpecifiers(str.slice(specifiersStart + 1, specifiersEnd - 1).trim());
 
-	constructor(str: string, start: number, specifiersStart: number, specifiersEnd: number, end: number, source: string) {
-		this.str = str;
-		this.start = start;
-		this.specifiersStart = specifiersStart;
-		this.specifiersEnd = specifiersEnd;
-		this.end = end;
-		this.source = source;
+	return {
+		start,
+		end,
+		source,
+		toString(nameBySource: Map<string, string>) {
+			const name = nameBySource.get(source);
 
-		this.specifiers = processSpecifiers(str.slice(specifiersStart + 1, specifiersEnd - 1).trim());
-	}
-
-	toString(nameBySource: Map<string, string>) {
-		const name = nameBySource.get(this.source);
-
-		return this.specifiers
-			.map(s => {
-				return `__exports.${s.as} = ${name ? `${name}.${s.name}` : s.name};`;
-			})
-			.join(' ') + ` /*${this.str.slice(this.start, this.end)}*/`
-	}
+			return specifiers
+				.map(s => {
+					return `__exports.${s.as} = ${name ? `${name}.${s.name}` : s.name};`;
+				})
+				.join(' ') + ` /*${str.slice(start, end)}*/`
+		}
+	};
 }
 
-class ExportDeclaration implements Range {
-	str: string;
-	start: number;
-	declarationStart: number;
-	end: number;
-	name: string;
+function exportDecl(str: string, start: number, c: number) {
+	const end = c;
 
-	constructor(str: string, start: number, c: number) {
-		this.str = str;
-		this.start = start;
-		this.end = c;
+	while (/\S/.test(str[c])) c += 1;
+	while (str[c] && !/\S/.test(str[c])) c += 1;
 
-		while (/\S/.test(str[c])) c += 1;
-		while (str[c] && !/\S/.test(str[c])) c += 1;
+	const nameStart = c;
+	while (/\S/.test(str[c])) c += 1;
+	const nameEnd = c;
 
-		const nameStart = c;
-		while (/\S/.test(str[c])) c += 1;
-		const nameEnd = c;
+	const name = str.slice(nameStart, nameEnd);
 
-		this.name = str.slice(nameStart, nameEnd);
-	}
-
-	toString() {
-		return '';
-	}
+	return {
+		start,
+		end,
+		name,
+		toString() {
+			return '';
+		}
+	};
 }
 
-class ExportStarDeclaration implements Range {
-	str: string;
-	start: number;
-	end: number;
-	source: string;
-
-	constructor(str: string, start: number, end: number, source: string) {
-		this.str = str;
-		this.start = start;
-		this.end = end;
-		this.source = source;
-	}
-
-	toString(nameBySource: Map<string, string>) {
-		const name = nameBySource.get(this.source);
-		return `Object.assign(__exports, ${name}); /*${this.str.slice(this.start, this.end)}*/`;
-	}
+function exportStarDeclaration(str: string, start: number, end: number, source: string) {
+	return {
+		start,
+		end,
+		source,
+		toString(nameBySource: Map<string, string>) {
+			return `Object.assign(__exports, ${nameBySource.get(source)}); /*${str.slice(start, end)}*/`;
+		}
+	};
 }
 
 const keywords = /\b(case|default|delete|do|else|in|instanceof|new|return|throw|typeof|void)\s*$/;
@@ -224,7 +179,7 @@ function processSpecifiers(str: string) {
 	});
 }
 
-function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
+function find(str: string): [Range[], Range[], Range[]] {
 	let quote: string;
 	let escapedFrom: State;
 	let regexEnabled = true;
@@ -242,8 +197,8 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 	var openingParenPositions: Record<string, number> = {};
 	var parenDepth = 0;
 
-	const importDeclarations: ImportDeclaration[] = [];
-	const importStatements: ImportStatement[] = [];
+	const importDeclarations: Range[] = [];
+	const importStatements: Range[] = [];
 	const exportDeclarations: Range[] = [];
 
 	function tokenClosesExpression() {
@@ -366,11 +321,9 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 	function base(char: string, i: number): State {
 		if (char in handlers) return handlers[char](i);
 
+		if (!isWhitespace(char)) lsci = i;
 		pfixOp = false;
 
-		if (!isWhitespace(char)) {
-			lsci = i;
-		}
 		return base;
 	}
 
@@ -385,7 +338,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 		while (str[i] && !isQuote(str[i])) i += 1;
 		const sourceEnd = i++;
 
-		importDeclarations.push(new ImportDeclaration(
+		importDeclarations.push(importDecl(
 			str,
 			start,
 			i,
@@ -398,7 +351,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 	}
 
 	function importStatement(i: number): State {
-		importStatements.push(new ImportStatement(
+		importStatements.push(importStmt(
 			i,
 			i += 6
 		));
@@ -434,7 +387,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 				i += 1;
 			}
 
-			exportDeclarations.push(new ExportSpecifiersDeclaration(
+			exportDeclarations.push(exportSpecifiersDeclaration(
 				str,
 				start,
 				declarationStart,
@@ -454,7 +407,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 			while (str[i] && !isQuote(str[i])) i += 1;
 			const sourceEnd = i++;
 
-			exportDeclarations.push(new ExportStarDeclaration(
+			exportDeclarations.push(exportStarDeclaration(
 				str,
 				start,
 				i,
@@ -463,7 +416,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 		}
 
 		else if (/default[\s\n]/.test(str.slice(i, i + 8))) {
-			exportDeclarations.push(new ExportDefaultDeclaration(
+			exportDeclarations.push(exportDefaultDeclaration(
 				str,
 				start,
 				declarationStart
@@ -471,7 +424,7 @@ function find(str: string): [ImportDeclaration[], ImportStatement[], Range[]] {
 		}
 
 		else {
-			exportDeclarations.push(new ExportDeclaration(
+			exportDeclarations.push(exportDecl(
 				str,
 				start,
 				declarationStart
