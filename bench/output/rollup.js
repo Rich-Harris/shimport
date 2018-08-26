@@ -1,22 +1,4 @@
-__shimport__.define('bench/samples/rollup.js', ['util', 'path', 'fs', 'crypto', 'module', 'events', 's an ExpressionStatement or LabeledStatement. We
-    // simply start parsing an expression, and afterwards, if the
-    // next token is a colon and the expression was a simple
-    // Identifier node, we switch to interpreting it as a label.
-  default:
-    if (this.isAsyncFunction()) {
-      if (!declaration) { this.unexpected(); }
-      this.next();
-      return this.parseFunctionStatement(node, true)
-    }
-
-    var maybeName = this.value, expr = this.parseExpression();
-    if (starttype === types.name && expr.type === ', ''], function(__import, __exports, util, path, __dep_2, crypto, module$1, __dep_5, ? this.parseImport(node) : this.parseExport(node, exports)
-
-    // If the statement does not start with a statement keyword or a
-    // brace, it, || !nextTokenIsDot(this)) return superF.call(this, refDestructuringErrors)
-
-        if (!this.options.allowImportExportEverywhere && !this.inModule) {
-          this.raise(this.start,){ /*
+__shimport__.define('bench/samples/rollup.js', ['util', 'path', 'fs', 'crypto', 'module', 'events'], function(__import, __exports, util, path, __dep_2, crypto, module$1, __dep_5){ /*
 	Rollup.js v0.65.0
 	Sat, 25 Aug 2018 13:41:58 GMT - commit 903516a760ce02804e7c5e4578ddce56e6f6bd17
 
@@ -13412,7 +13394,7 @@ var Module = /** @class */ (function () {
         var hasReexports = false;
         for (var importName in this.reexports) {
             hasReexports = true;
-            var re= this.reexports[importName];
+            var reexport = this.reexports[importName];
             this.imports[importName] = {
                 source: reexport.source,
                 start: reexport.start,
@@ -14626,7 +14608,7 @@ var Chunk$1 = /** @class */ (function () {
             }
             if (dep.reexports) {
                 for (var _b = 0, _c = dep.reexports; _b < _c.length; _b++) {
-                    var re= _c[_b];
+                    var reexport = _c[_b];
                     reexport.imported = _this.getVariableExportName(oldExportNames[reexport.imported]);
                 }
             }
@@ -15715,13 +15697,7 @@ pp$1.parseStatement = function(declaration, topLevel, exports) {
       if (!this.inModule)
         { this.raise(this.start, "'import' and 'export' may appear only with 'sourceType: module'"); }
     }
-    return starttype === types._? this.parseImport(node) : this.parseExport(node, exports)
-
-    // If the statement does not start with a statement keyword or a
-    // brace, it = ? this.parseImport(node) : this.parseExport(node, exports)
-
-    // If the statement does not start with a statement keyword or a
-    // brace, it.default; /*import ? this.parseImport(node) : this.parseExport(node, exports)
+    return starttype === types._import ? this.parseImport(node) : this.parseExport(node, exports)
 
     // If the statement does not start with a statement keyword or a
     // brace, it's an ExpressionStatement or LabeledStatement. We
@@ -15736,7 +15712,7 @@ pp$1.parseStatement = function(declaration, topLevel, exports) {
     }
 
     var maybeName = this.value, expr = this.parseExpression();
-    if (starttype === types.name && expr.type === "*/Identifier" && this.eat(types.colon))
+    if (starttype === types.name && expr.type === "Identifier" && this.eat(types.colon))
       { return this.parseLabeledStatement(node, maybeName, expr) }
     else { return this.parseExpressionStatement(node, expr) }
   }
@@ -20363,16 +20339,10 @@ var inject$1 = function (acorn) {
 
     instance.extend("parseExprAtom", function (superF) {
       return function(refDestructuringErrors) {
-        if (this.type !== tt._|| !nextTokenIsDot(this)) return superF.call(this, refDestructuringErrors)
+        if (this.type !== tt._import || !nextTokenIsDot(this)) return superF.call(this, refDestructuringErrors)
 
         if (!this.options.allowImportExportEverywhere && !this.inModule) {
-          this.raise(this.start, = || !nextTokenIsDot(this)) return superF.call(this, refDestructuringErrors)
-
-        if (!this.options.allowImportExportEverywhere && !this.inModule) {
-          this.raise(this.start,.default; /*import || !nextTokenIsDot(this)) return superF.call(this, refDestructuringErrors)
-
-        if (!this.options.allowImportExportEverywhere && !this.inModule) {
-          this.raise(this.start, "'*/import' and 'export' may appear only with 'sourceType: module'");
+          this.raise(this.start, "'import' and 'export' may appear only with 'sourceType: module'");
         }
 
         let node = this.startNode();
@@ -26579,7 +26549,5 @@ function watch$1(configs) {
 __exports.rollup = rollup; __exports.watch = watch$1; __exports.VERSION = version$1; /*export { rollup, watch$1 as watch, version$1 as VERSION }*/;
 //# sourceMappingURL=rollup.es.js.map
 
-__exports.this.reexports[importName]; = this.reexports[importName];;
-__exports._c[_b]; = _c[_b];;
 });
 //# sourceURL=bench/samples/rollup.js

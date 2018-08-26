@@ -284,13 +284,18 @@ function find(str: string): [Range[], Range[], Range[]] {
 		},
 
 		'i': (i: number) => {
-			if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
-			if (str.slice(i, i + 7) === 'import(') return importStatement(i);
+			if (i === 0 || isWhitespace(str[i - 1])) {
+				if (/import[\s\n]/.test(str.slice(i, i + 7))) return importDeclaration(i);
+				if (str.slice(i, i + 7) === 'import(') return importStatement(i);
+			}
 			return base;
 		},
 
 		'e': (i: number) => {
-			if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
+			if (i === 0 || isWhitespace(str[i - 1])) {
+				if (str.slice(i, i + 7) === 'export ') return exportDeclaration(i);
+			}
+
 			return base;
 		},
 
