@@ -19,18 +19,21 @@ We can do this by adding a simple script tag to our `index.html` file:
 
 ```html
 <script>
-  var __s = document.createElement('script');
-
-  try {
-    new Function('import("")');
-    __s.type = 'module';
-    __s.src = 'js/app.js';
-  } catch (e) {
-    __s.src = 'https://unpkg.com/shimport'
-    __s.dataset.main = 'js/app.js';
+  function shimport(src) {
+    var s = document.createElement('script');
+    try {
+      new Function('import("")');
+      s.type = 'module';
+      s.src = src;
+    } catch (e) {
+      s.src = 'https://unpkg.com/shimport'
+      s.dataset.main = src;
+    }
+    document.head.appendChild(s);
   }
-
-  document.head.appendChild(__s);
+  
+  // Load 'js/app.js' via built-in import(), falling back to shimport if needed:
+  shimport('js/app.js');
 </script>
 ```
 
