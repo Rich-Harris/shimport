@@ -49,7 +49,7 @@ Most of the time you won't need to interact directly with Shimport, but it's use
 
 * `load(url: string) => Promise<module>` — `url` must be fully qualified
 * `transform(source: string) => string` — converts a JavaScript module to a Shimport module
-* `define(id: string, deps: string[], factory: (...) => void)` — used interally to construct modules
+* `define(id: string, deps: string[], factory: (...) => void)` — used internally to construct modules
 
 
 ## Using with Rollup and code-splitting
@@ -94,7 +94,7 @@ __shimport__.load(href).then(mod => {
 
 ## Is it fast?
 
-Blazingly. The code transformation is fast enough that you probalby don't need to worry about it, unless you're shipping far too much JavaScript in the first place.
+Blazingly. The code transformation is fast enough that you probably don't need to worry about it, unless you're shipping far too much JavaScript in the first place.
 
 A future version of Shimport may use web workers to do the transformation off the main thread.
 
