@@ -167,7 +167,8 @@ function processSpecifiers(str: string) {
 function getImportDeclaration(str: string, i: number) {
 	const start = i;
 
-	const specifierStart = i += 7;
+	const specifierStart = i += 6;
+	while (str[i] && isWhitespace(str[i])) i += 1;
 	while (str[i] && !isQuote(str[i])) i += 1;
 	const specifierEnd = i;
 
@@ -197,8 +198,8 @@ function getImportStatement(i: number) {
 function getExportDeclaration(str: string, i: number) {
 	const start = i;
 
-	i += 7;
-	while (isWhitespace(str[i])) i += 1;
+	i += 6;
+	while (str[i] && isWhitespace(str[i])) i += 1;
 
 	const declarationStart = i;
 
@@ -387,7 +388,7 @@ function find(str: string): [Range[], Range[], Range[]] {
 			// import
 			(i: number) => {
 				if (i === 0 || isWhitespace(str[i - 1])) {
-					if (/import[\s\n]/.test(str.slice(i, i + 7))) {
+					if (/import[\s\n{]/.test(str.slice(i, i + 7))) {
 						const d = getImportDeclaration(str, i);
 						importDeclarations.push(d);
 						p = d.end;
@@ -404,7 +405,7 @@ function find(str: string): [Range[], Range[], Range[]] {
 			// export
 			(i: number) => {
 				if (i === 0 || isWhitespace(str[i - 1])) {
-					if (/export[\s\n]/.test(str.slice(i, i + 7))) {
+					if (/export[\s\n{]/.test(str.slice(i, i + 7))) {
 						const d = getExportDeclaration(str, i);
 						exportDeclarations.push(d);
 						p = d.end;
