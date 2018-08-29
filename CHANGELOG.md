@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.6
+
+* Handle minified declarations
+
 ## 0.0.5
 
 * Handle empty imports/exports
