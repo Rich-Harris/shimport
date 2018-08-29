@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.7
+
+* Handle semi-colon-separated declarations
+
 ## 0.0.6
 
 * Handle minified declarations
