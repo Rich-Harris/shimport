@@ -1,0 +1,2 @@
+// unambiguous grammar
+export {};

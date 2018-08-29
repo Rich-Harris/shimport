@@ -70,9 +70,9 @@ function exportSpecifiersDeclaration(str: string, start: number, specifiersStart
 
 			return specifiers
 				.map(s => {
-					return `__exports.${s.as} = ${name ? `${name}.${s.name}` : s.name};`;
+					return `__exports.${s.as} = ${name ? `${name}.${s.name}` : s.name}; `;
 				})
-				.join(' ') + ` /*${str.slice(start, end)}*/`
+				.join('') + `/*${str.slice(start, end)}*/`
 		}
 	};
 }
@@ -150,14 +150,18 @@ function processImportSpecifiers(str: string): Specifier[] {
 
 	if (str[0] === '{') return processSpecifiers(str.slice(1, -1).trim());
 
-	return [{ name: 'default', as: str }];
+	if (str) return [{ name: 'default', as: str }];
+
+	return [];
 }
 
 function processSpecifiers(str: string) {
-	return str.split(',').map(part => {
-		const [name, , as] = part.trim().split(/[^\S]+/);
-		return { name, as: as || name };
-	});
+	return str
+		? str.split(',').map(part => {
+			const [name, , as] = part.trim().split(/[^\S]+/);
+			return { name, as: as || name };
+		})
+		: [];
 }
 
 function getImportDeclaration(str: string, i: number) {
