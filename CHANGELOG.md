@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.9
+
+* Handle minified dynamic import
+
 ## 0.0.8
 
 * Add VERSION export
