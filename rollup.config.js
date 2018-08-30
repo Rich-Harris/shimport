@@ -1,5 +1,5 @@
 import typescript from 'rollup-plugin-typescript';
-import json from 'rollup-plugin-json';
+import replace from 'rollup-plugin-replace';
 import { terser } from 'rollup-plugin-terser';
 import filesize from 'rollup-plugin-filesize';
 import pkg from './package.json';
@@ -12,10 +12,10 @@ export default [
 		],
 		name: '__shimport__',
 		plugins: [
+			replace({ __VERSION__: JSON.stringify(pkg.version) }),
 			typescript({
 				typescript: require('typescript')
 			}),
-			json(),
 			terser(),
 			{
 				transformBundle(code) {
@@ -36,10 +36,10 @@ export default [
 		],
 		name: '__shimport__',
 		plugins: [
+			replace({ __VERSION__: JSON.stringify(pkg.version) }),
 			typescript({
 				typescript: require('typescript')
 			}),
-			json(),
 			{
 				transformBundle(code) {
 					return {
