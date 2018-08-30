@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.8
+
+* Add VERSION export
+
 ## 0.0.7
 
 * Handle semi-colon-separated declarations

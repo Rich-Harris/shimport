@@ -1,7 +1,7 @@
 {
   "name": "shimport",
   "description": "Shim for dynamic import()",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "repository": "Rich-Harris/shimport",
   "main": "index.js",
   "files": [
@@ -19,6 +19,7 @@
     "pretty-ms": "^3.2.0",
     "rollup": "^0.52.0",
     "rollup-plugin-filesize": "^4.0.1",
+    "rollup-plugin-json": "^3.0.0",
     "rollup-plugin-terser": "^1.0.1",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-virtual": "^1.0.1",

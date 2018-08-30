@@ -1,4 +1,5 @@
 import typescript from 'rollup-plugin-typescript';
+import json from 'rollup-plugin-json';
 import { terser } from 'rollup-plugin-terser';
 import filesize from 'rollup-plugin-filesize';
 import pkg from './package.json';
@@ -14,6 +15,7 @@ export default [
 			typescript({
 				typescript: require('typescript')
 			}),
+			json(),
 			terser(),
 			{
 				transformBundle(code) {
@@ -37,6 +39,7 @@ export default [
 			typescript({
 				typescript: require('typescript')
 			}),
+			json(),
 			{
 				transformBundle(code) {
 					return {
