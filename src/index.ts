@@ -12,6 +12,6 @@ if (typeof document !== 'undefined') {
 	}
 }
 
-const VERSION = __VERSION__;
+const VERSION = "__VERSION__";
 
 export { transform, define, load, VERSION };

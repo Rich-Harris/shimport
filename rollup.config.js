@@ -12,7 +12,7 @@ export default [
 		],
 		name: '__shimport__',
 		plugins: [
-			replace({ __VERSION__: JSON.stringify(pkg.version) }),
+			replace({ __VERSION__: pkg.version }),
 			typescript({
 				typescript: require('typescript')
 			}),
@@ -36,7 +36,7 @@ export default [
 		],
 		name: '__shimport__',
 		plugins: [
-			replace({ __VERSION__: JSON.stringify(pkg.version) }),
+			replace({ __VERSION__: pkg.version }),
 			typescript({
 				typescript: require('typescript')
 			}),
