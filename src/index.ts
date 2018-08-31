@@ -8,7 +8,7 @@ interface Script extends Element {
 if (typeof document !== 'undefined') {
 	const scr: Script = document.querySelector('[data-main]');
 	if (scr) {
-		load(new URL(scr.dataset.main, document.baseURI));
+		load(new URL(scr.getAttribute('data-main'), document.baseURI));
 	}
 }
 

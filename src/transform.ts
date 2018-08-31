@@ -404,7 +404,7 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 			// export
 			(i: number) => {
-				if (i === 0 || isWhitespace(str[i - 1]) || str[i - 1] === ';') {
+				if (i === 0 || isWhitespace(str[i - 1]) || punctuatorChars.test(str[i - 1])) {
 					if (/export[\s\n{]/.test(str.slice(i, i + 7))) {
 						const d = getExportDeclaration(str, i);
 						exportDeclarations.push(d);

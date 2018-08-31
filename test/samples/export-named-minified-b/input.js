@@ -1,3 +1,4 @@
 const foo = 42;
 const bar = 43;
-export{foo};export{bar};
+const baz = 44;
+export{foo};export{bar};if(x){}export{baz}
