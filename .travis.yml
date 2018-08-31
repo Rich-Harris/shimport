@@ -1,7 +1,15 @@
 language: node_js
 node_js:
-  - "8"
+  - "stable"
 
 env:
   global:
     - BUILD_TIMEOUT=10000
+
+branches:
+  only:
+  - master
+
+install: npm ci || npm install
+
+after_success: npm run deploy

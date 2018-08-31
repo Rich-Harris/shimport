@@ -1,5 +1,11 @@
 # Shimport changelog
 
+## 0.0.10
+
+* Another minified dynamic import case
+* Use `getAttribute('data-main')` instead of `dataset.main` for older browsers
+* Avoid `[].find`, so it doesn't need polyfilling
+
 ## 0.0.9
 
 * Handle minified dynamic import
