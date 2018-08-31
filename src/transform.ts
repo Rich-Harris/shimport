@@ -15,9 +15,15 @@ interface Range {
 	[key: string]: any;
 }
 
+function get_alias(specifiers: Specifier[], name: string) {
+	let i = specifiers.length;
+	while (i--) {
+		if (specifiers[i].name === name) return specifiers[i].as;
+	}
+}
+
 function importDecl(str: string, start: number, end: number, specifiers: Specifier[], source: string) {
-	const hint = specifiers.find(s => s.name === '*') || specifiers.find(s => s.name === 'default');
-	const name = hint && hint.as;
+	const name = get_alias(specifiers, '*') || get_alias(specifiers, 'default');
 
 	return {
 		start,
