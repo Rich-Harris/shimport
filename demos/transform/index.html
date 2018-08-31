@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Transform</title>
+	<link rel="stylesheet" href="/styles.css">
+
+	<style>
+		body {
+			max-width: none;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: 1fr;
+			grid-gap: 1em;
+			height: calc(100vh - 12em);
+			min-height: 400px;
+		}
+
+		textarea {
+			height: 100%;
+			resize: none;
+			font-size: 16px;
+			font-family: monospace;
+			padding: 0.5em;
+			white-space: pre;
+			box-sizing: border-box;
+			line-height: 1.35;
+			border: 1px solid #999;
+			border-radius: 2px;
+		}
+
+		#output {
+			background-color: #f9f9f9;
+		}
+
+		#status {
+			float: right;
+			font-size: 14px;
+			color: #999;
+		}
+
+		#status.error {
+			color: red;
+		}
+
+		@media (min-width: 800px) {
+			.grid {
+				grid-template-columns: 1fr 2fr;
+			}
+		}
+
+	</style>
+</head>
+<body>
+	<h1>Transform</h1>
+
+	<main>
+		<div class="grid">
+			<textarea id="input"></textarea>
+			<textarea id="output" readonly></textarea>
+		</div>
+
+		<span id="status"></span>
+	</main>
+
+	<script src="../shimport.dev.js"></script>
+	<script>
+		(function() {
+			const input = document.querySelector('#input');
+			const output = document.querySelector('#output');
+			const status = document.querySelector('#status');
+
+			input.value = `
+			import foo from './foo.js';
+			import { a, b } from './bar.js';
+			import * as baz from './baz.js';
+
+			export const answer = 42;
+			`.trim().replace(/^\t+/gm, '');
+
+			function update() {
+				try {
+					const start = window.performance.now();
+					const transformed = __shimport__.transform(input.value, 'demo.js');
+					const duration = window.performance.now() - start;
+
+					output.value = transformed;
+					status.textContent = `transformed in ${duration.toFixed(2)}ms`;
+					status.classList.remove('error');
+				} catch (err) {
+					status.textContent = err.message;
+					status.classList.add('error');
+				}
+			}
+
+			input.addEventListener('input', update);
+			update();
+		}());
+	</script>
+</body>
+</html>

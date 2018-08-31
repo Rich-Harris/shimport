@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Web workers</title>
+	<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+	<h1>Web workers</h1>
+
+	<p>You can use Shimport in web workers via <code>importScripts</code>. This is the code inside <a href="./worker.js">worker.js</a> — you can see the output by opening the console.</p>
+
+	<h2>worker.js</h2>
+	<pre>
+importScripts('../shimport.js');
+__shimport__.load('./app/main.js', location.href);</pre>
+
+	<h2>app/main.js</h2>
+	<pre>
+import { foo } from './foo.js';
+
+console.log(foo);
+
+import('./bar.js').then(({ bar }) => {
+	console.log(bar);
+});</pre>
+
+	<h2>app/foo.js</h2>
+	<pre>
+export const foo = `hello from ${location.origin}/web-worker/app/foo.js!`;</pre>
+
+	<h2>app/bar.js</h2>
+	<pre>
+export const bar = `hello from ${location.origin}/web-worker/app/bar.js!`;</pre>
+
+	<script>
+		var worker = new Worker('worker.js');
+	</script>
+</body>
+</html>

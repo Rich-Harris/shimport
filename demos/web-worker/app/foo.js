@@ -1,0 +1,1 @@
+export const foo = `hello from ${location.origin}/web-worker/app/foo.js!`;

@@ -5,3 +5,5 @@ node_modules
 /index.js
 /index.dev.js
 /test/samples/_
+/demos/shimport.js
+/demos/shimport.dev.js

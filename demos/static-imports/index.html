@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>Static imports</title>
+	<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+	<h1>Static imports</h1>
+
+	<main></main>
+
+	<script>
+		function shimport(src) {
+			try {
+				new Function('import("' + src + '")')();
+			} catch (e) {
+				var s = document.createElement('script');
+				s.src = '../shimport.js'
+				s.dataset.main = src;
+				document.head.appendChild(s);
+			}
+		}
+
+		shimport('./main.js');
+	</script>
+</body>
+</html>
