@@ -1,5 +1,10 @@
 # Shimport changelog
 
+## 0.0.11
+
+* Handle minified bare imports
+* Ignore punctuators when determining declaration names ([#3](https://github.com/Rich-Harris/shimport/issues/3))
+
 ## 0.0.10
 
 * Another minified dynamic import case

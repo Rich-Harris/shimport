@@ -86,11 +86,11 @@ function exportSpecifiersDeclaration(str: string, start: number, specifiersStart
 function exportDecl(str: string, start: number, c: number) {
 	const end = c;
 
-	while (/\S/.test(str[c])) c += 1;
+	while (str[c] && /\S/.test(str[c])) c += 1;
 	while (str[c] && !/\S/.test(str[c])) c += 1;
 
 	const nameStart = c;
-	while (/\S/.test(str[c])) c += 1;
+	while (str[c] && !punctuatorChars.test(str[c]) && !isWhitespace(str[c])) c += 1;
 	const nameEnd = c;
 
 	const name = str.slice(nameStart, nameEnd);
@@ -394,7 +394,7 @@ function find(str: string): [Range[], Range[], Range[]] {
 			// import
 			(i: number) => {
 				if (i === 0 || isWhitespace(str[i - 1]) || punctuatorChars.test(str[i - 1])) {
-					if (/import[\s\n{]/.test(str.slice(i, i + 7))) {
+					if (/import[\s\n{"']/.test(str.slice(i, i + 7))) {
 						const d = getImportDeclaration(str, i);
 						importDeclarations.push(d);
 						p = d.end;
