@@ -107,6 +107,26 @@ Specifically, it will not correctly handle cyclical dependencies or live binding
 
 Because Shimport uses `fetch`, and evaluates the transformed result, it will not work with some CSP and CORS configurations.
 
+## Use shimport server side as node module
+
+Parsing and transformations can be also used server side as node.js module to convert client side ES6 modules into any imaginable or legacy format.
+
+Install shimport as `npm i shimport`
+
+Usage:
+
+```js
+import { transform, find } from 'shimport'
+
+// Parses source code of ES6 JS module and export import/export statements
+const [importDeclarations, importStatements, exportDeclarations] = find(sourceCode)
+
+// Transforms source code of ES6 JS module into shimimport's custom format. 
+// Not very usefull on server side, but source code of the function can be 
+// good example, how to create your own transformation.
+const transformedSource = transform(sourceCode,idOfModule)
+
+```
 
 
 ## License

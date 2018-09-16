@@ -272,7 +272,7 @@ function getExportDeclaration(str: string, i: number) {
 	);
 }
 
-function find(str: string): [Range[], Range[], Range[]] {
+export function find(str: string): [Range[], Range[], Range[]] {
 	let escapedFrom: State;
 	let regexEnabled = true;
 	let pfixOp = false;

@@ -49,5 +49,27 @@ export default [
 				}
 			}
 		]
+	},
+
+	{
+		input: 'src/indexNode.ts',
+		output: [
+			{ file: 'indexNode.js', format: 'cjs' }
+		],
+		name: '__shimport__',
+		plugins: [
+			replace({ __VERSION__: pkg.version }),
+			typescript({
+				typescript: require('typescript')
+			}),
+			{
+				transformBundle(code) {
+					return {
+						code: code.replace('alert', '(0,eval)'),
+						map: null
+					};
+				}
+			}
+		]
 	}
 ];
