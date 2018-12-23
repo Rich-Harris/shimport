@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.12
+
+* Handle minified export-from declarations ([#12](https://github.com/Rich-Harris/shimport/pull/12))
+
 ## 0.0.11
 
 * Handle minified bare imports
