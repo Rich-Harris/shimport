@@ -218,8 +218,9 @@ function getExportDeclaration(str: string, i: number) {
 		let source = null;
 
 		while (isWhitespace(str[i])) i += 1;
-		if (/^from[\s\n]/.test(str.slice(i, i + 5))) {
-			i += 5;
+		if (/^from[\s\n'"]/.test(str.slice(i, i + 5))) {
+			i += 4;
+			while (isWhitespace(str[i])) i += 1;
 
 			while (str[i] && !isQuote(str[i])) i += 1;
 			const sourceStart = i += 1;
