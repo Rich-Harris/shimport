@@ -55,6 +55,27 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 function exportDefaultDeclaration(str: string, start: number, end: number) {
 	while (/\S/.test(str[end])) end += 1;
 
+	const match = /^\s*(?:(class)\s*{|(function)\s*\()/.exec(str.slice(end));
+
+	if (match) {
+		// anonymous class declaration
+		end += match[0].length;
+
+		const name = '__default_export';
+
+		return {
+			start,
+			end,
+			name,
+			as: 'default',
+			toString() {
+				return match[1]
+					? `class ${name}{`
+					: `function ${name}(`;
+			}
+		};
+	}
+
 	return {
 		start,
 		end,
@@ -623,7 +644,7 @@ export function transform(source: string, id: string) {
 	transformed += source.slice(c);
 
 	exportDeclarations.forEach(d => {
-		if (d.name) transformed += `\n__exports.${d.name} = ${d.name};`;
+		if (d.name) transformed += `\n__exports.${d.as || d.name} = ${d.name};`;
 	});
 
 	transformed += `\n});\n//# sourceURL=${id}`;
