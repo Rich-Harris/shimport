@@ -55,7 +55,7 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 function exportDefaultDeclaration(str: string, start: number, end: number) {
 	while (/\S/.test(str[end])) end += 1;
 
-	const match = /^\s*(?:(class)\s*{|(function)\s*\()/.exec(str.slice(end));
+	const match = /^\s*(?:(class)(\s+extends|\s*{)|(function)\s*\()/.exec(str.slice(end));
 
 	if (match) {
 		// anonymous class declaration
@@ -70,7 +70,7 @@ function exportDefaultDeclaration(str: string, start: number, end: number) {
 			as: 'default',
 			toString() {
 				return match[1]
-					? `class ${name}{`
+					? `class ${name}${match[2]}`
 					: `function ${name}(`;
 			}
 		};
