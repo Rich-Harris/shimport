@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.14
+
+* Handle anonymous `class extends` ([#13](https://github.com/Rich-Harris/shimport/issues/13))
+
 ## 0.0.13
 
 * Handle anonymous default class/function exports ([#13](https://github.com/Rich-Harris/shimport/issues/13))
