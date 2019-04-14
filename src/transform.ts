@@ -523,10 +523,10 @@ function find(str: string): [Range[], Range[], Range[]] {
 	};
 
 	const template_string: State = {
-		pattern: /(?:(\$)|(\\)|(`))/g,
+		pattern: /(?:(\${)|(\\)|(`))/g,
 
 		handlers: [
-			// $
+			// ${
 			() => template_string_dollar,
 
 			// \\
