@@ -24,6 +24,35 @@ export function load(url: string | URL) {
 	return promises[<string>url] || (
 		promises[<string>url] = fetch(<string>url)
 			.then(r => r.text())
-			.then(text => alert(transform(text, <string>url)))
+			.then(text => evaluate(transform(text, <string>url)))
 	);
+}
+
+let uid = 1;
+
+function evaluate(code: string) {
+	if (typeof URL !== 'undefined') {
+		return new Promise(fulfil => {
+			const id = `__shimport__${uid++}`;
+
+			// creating a script tag gives us proper stack traces
+			const blob = new Blob([`${id}=${code}`], {
+				type: 'application/javascript'
+			});
+
+			const script = document.createElement('script');
+			script.src = URL.createObjectURL(blob);
+
+			script.onload = () => {
+				fulfil(window[id]);
+				delete window[id];
+			};
+
+			document.head.appendChild(script);
+		});
+
+	} else {
+		// for browsers without `URL`
+		return alert(code); // 'alert' is replaced with `(0,eval)`
+	}
 }
