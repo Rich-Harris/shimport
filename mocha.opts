@@ -1,2 +1,2 @@
---require ts-node/register
+--require sucrase/register/ts
 test/test.ts

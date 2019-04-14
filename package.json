@@ -25,8 +25,8 @@
     "rollup-plugin-virtual": "^1.0.1",
     "sander": "^0.6.0",
     "serve": "^10.0.0",
+    "sucrase": "^3.10.1",
     "surge": "^0.20.1",
-    "ts-node": "^3.3.0",
     "typescript": "^2.6.2"
   },
   "scripts": {
