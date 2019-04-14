@@ -142,7 +142,7 @@ const punctuators = /(^|\{|\(|\[\.|;|,|<|>|<=|>=|==|!=|===|!==|\+|-|\*\%|<<|>>|>
 const ambiguous = /(\}|\)|\+\+|--)\s*$/;
 
 const punctuatorChars = /[{}()[.;,<>=+\-*%&|\^!~?:/]/;
-const keywordChars = /[a-z]/;
+const keywordChars = /[a-zA-Z_$0-9]/;
 
 const whitespace_obj = { ' ': 1, '\t': 1, '\n': 1, '\r': 1, '\f': 1, '\v': 1, '\u00A0': 1, '\u2028': 1, '\u2029': 1 };
 
