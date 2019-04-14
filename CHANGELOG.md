@@ -1,5 +1,11 @@
 # Shimport changelog
 
+## 0.0.15
+
+* Use blob URLs for stack traces ([#17](https://github.com/Rich-Harris/shimport/pull/17))
+* Fix code transformation with `$` character in template strings ([#16](https://github.com/Rich-Harris/shimport/issues/16))
+* Fix false positive keyword detection ([#8](https://github.com/Rich-Harris/shimport/issues/8))
+
 ## 0.0.14
 
 * Handle anonymous `class extends` ([#13](https://github.com/Rich-Harris/shimport/issues/13))
