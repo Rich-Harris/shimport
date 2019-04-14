@@ -44,8 +44,8 @@ function evaluate(code: string) {
 			script.src = URL.createObjectURL(blob);
 
 			script.onload = () => {
-				fulfil(window[id]);
-				delete window[id];
+				fulfil((window as any)[id]);
+				delete (window as any)[id];
 			};
 
 			document.head.appendChild(script);
@@ -53,6 +53,6 @@ function evaluate(code: string) {
 
 	} else {
 		// for browsers without `URL`
-		return alert(code); // 'alert' is replaced with `(0,eval)`
+		return <unknown>alert(code); // 'alert' is replaced with `(0,eval)`
 	}
 }
