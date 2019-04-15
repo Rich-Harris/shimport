@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 0.0.16
+
+* Fix template string transformation ([#20](https://github.com/Rich-Harris/shimport/issues/20))
+
 ## 0.0.15
 
 * Use blob URLs for stack traces ([#17](https://github.com/Rich-Harris/shimport/pull/17))
