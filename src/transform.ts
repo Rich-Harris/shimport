@@ -527,27 +527,16 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 		handlers: [
 			// ${
-			() => template_string_dollar,
+			() => {
+				stack.push(template_string);
+				return base;
+			},
 
 			// \\
 			() => ((escapedFrom = template_string), escaped),
 
 			// `
 			() => base
-		]
-	};
-
-	const template_string_dollar: State = {
-		pattern: /({)/g,
-
-		handlers: [
-			// {
-			() => {
-				stack.push(template_string);
-				return base;
-			},
-
-			() => template_string
 		]
 	};
 
