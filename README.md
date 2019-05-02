@@ -1,9 +1,5 @@
 # Shimport
 
-**WARNING** this is experimental!
-
----
-
 A 2kb shim for `import` and `export`. Allows you to use JavaScript modules in **all** browsers, including dynamic `import()`.
 
 
@@ -29,7 +25,7 @@ We can do this by adding a simple script tag to our `index.html` file:
       document.head.appendChild(s);
     }
   }
-  
+
   // Load 'js/app.js' via built-in import(), falling back to shimport if needed:
   shimport('./js/app.js');
 </script>

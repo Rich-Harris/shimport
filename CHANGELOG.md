@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 1.0.0
+
+* Stable release
+
 ## 0.0.16
 
 * Fix template string transformation ([#20](https://github.com/Rich-Harris/shimport/issues/20))
