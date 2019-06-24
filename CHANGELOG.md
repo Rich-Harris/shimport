@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 1.0.1
+
+* Handle `export default` followed by non-whitespace character ([#22](https://github.com/Rich-Harris/shimport/issues/22))
+
 ## 1.0.0
 
 * Stable release
