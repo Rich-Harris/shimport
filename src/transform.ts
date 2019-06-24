@@ -53,8 +53,6 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 }
 
 function exportDefaultDeclaration(str: string, start: number, end: number) {
-	while (/\S/.test(str[end])) end += 1;
-
 	const match = /^\s*(?:(class)(\s+extends|\s*{)|(function)\s*\()/.exec(str.slice(end));
 
 	if (match) {
@@ -279,11 +277,11 @@ function getExportDeclaration(str: string, i: number) {
 		);
 	}
 
-	if (/default[\s\n]/.test(str.slice(i, i + 8))) {
+	if (/^default\b/.test(str.slice(i, i + 8))) {
 		return exportDefaultDeclaration(
 			str,
 			start,
-			declarationStart
+			declarationStart + 7
 		);
 	}
 
