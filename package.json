@@ -33,5 +33,5 @@
     "demos:build": "cp index.js demos/shimport.js && cp index.dev.js demos/shimport.dev.js && node demos/build.js",
     "demos:start": "serve demos"
   },
-  "license": "LIL"
+  "license": "MIT"
 }
