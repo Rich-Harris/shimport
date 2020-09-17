@@ -107,4 +107,4 @@ Because Shimport uses `fetch`, and evaluates the transformed result, it will not
 
 ## License
 
-[LIL](LICENSE)
+[MIT](LICENSE)
