@@ -1,5 +1,10 @@
 # Shimport changelog
 
+## 2.0.0
+
+* Switch to MIT License ([#28](https://github.com/Rich-Harris/shimport/issues/28))
+* Support `import.meta.url` ([#31](https://github.com/Rich-Harris/shimport/pull/31))
+
 ## 1.0.1
 
 * Handle `export default` followed by non-whitespace character ([#22](https://github.com/Rich-Harris/shimport/issues/22))
