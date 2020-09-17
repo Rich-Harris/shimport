@@ -9,7 +9,6 @@
     "index.dev.js"
   ],
   "devDependencies": {
-    "@ampproject/rollup-plugin-closure-compiler": "^0.6.1",
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.53",
     "glob": "^7.1.2",
@@ -18,7 +17,6 @@
     "mocha": "^4.0.1",
     "pretty-ms": "^3.2.0",
     "rollup": "^0.52.0",
-    "rollup-plugin-filesize": "^4.0.1",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-terser": "^1.0.1",
     "rollup-plugin-typescript": "^0.8.1",

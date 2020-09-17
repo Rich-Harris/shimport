@@ -1,7 +1,6 @@
 import typescript from 'rollup-plugin-typescript';
 import replace from 'rollup-plugin-replace';
 import { terser } from 'rollup-plugin-terser';
-import filesize from 'rollup-plugin-filesize';
 import pkg from './package.json';
 
 export default [
@@ -24,8 +23,7 @@ export default [
 						map: null
 					};
 				}
-			},
-			filesize()
+			}
 		]
 	},
 
