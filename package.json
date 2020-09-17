@@ -25,12 +25,13 @@
     "serve": "^10.0.0",
     "sucrase": "^3.10.1",
     "surge": "^0.20.1",
-    "typescript": "^2.6.2"
+    "typescript": "^2.6.2",
+    "uvu": "^0.3.3"
   },
   "scripts": {
     "dev": "rollup -cw",
     "build": "rollup -c",
-    "test": "mocha --opts mocha.opts",
+    "test": "uvu -r sucrase/register/ts . test/test.ts",
     "prepublishOnly": "npm test && npm run build",
     "deploy": "npm run build && npm run demos:build && surge demos --domain shimport-demos.surge.sh",
     "demos:build": "cp index.js demos/shimport.js && cp index.dev.js demos/shimport.dev.js && node demos/build.js",
