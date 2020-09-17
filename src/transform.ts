@@ -220,6 +220,24 @@ function getImportStatement(i: number) {
 	};
 }
 
+const importMetaUrlPattern = new RegExp(
+	'^' +
+	['import', 'meta', 'url'].join('[\s\n]*\.[\s\n]*')
+);
+
+function getImportMetaUrl(str: string, start: number, id: string) {
+	const match = importMetaUrlPattern.exec(str.slice(start));
+	if (match) {
+		return {
+			start,
+			end: start + match[0].length,
+			toString() {
+				return JSON.stringify(id);
+			}
+		}
+	}
+}
+
 function getExportDeclaration(str: string, i: number) {
 	const start = i;
 
@@ -292,7 +310,7 @@ function getExportDeclaration(str: string, i: number) {
 	);
 }
 
-function find(str: string): [Range[], Range[], Range[]] {
+function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 	let escapedFrom: State;
 	let regexEnabled = true;
 	let pfixOp = false;
@@ -308,6 +326,7 @@ function find(str: string): [Range[], Range[], Range[]] {
 
 	const importDeclarations: Range[] = [];
 	const importStatements: Range[] = [];
+	const importMetaUrls: Range[] = [];
 	const exportDeclarations: Range[] = [];
 
 	function tokenClosesExpression() {
@@ -414,16 +433,33 @@ function find(str: string): [Range[], Range[], Range[]] {
 			// import
 			(i: number) => {
 				if (i === 0 || isWhitespace(str[i - 1]) || punctuatorChars.test(str[i - 1])) {
-					if (/import[\s\n{"']/.test(str.slice(i, i + 7))) {
+					let j = i + 6;
+					let char;
+
+					do {
+						char = str[j++];
+					} while (isWhitespace(char));
+
+					const hasWhitespace = j > i + 7;
+
+					if (/^['"{*]$/.test(char) || (hasWhitespace && /^[a-zA-Z_$]$/.test(char))) {
 						const d = getImportDeclaration(str, i);
 						importDeclarations.push(d);
 						p = d.end;
 					}
 
-					else if (str.slice(i, i + 7) === 'import(') {
+					else if (char === '(') {
 						const s = getImportStatement(i);
 						importStatements.push(s);
 						p = s.end;
+					}
+
+					else if (char === '.') {
+						const u = getImportMetaUrl(str, i, id);
+						if (u) {
+							importMetaUrls.push(u);
+							p = u.end;
+						}
 					}
 				}
 			},
@@ -582,11 +618,21 @@ function find(str: string): [Range[], Range[], Range[]] {
 		}
 	}
 
-	return [importDeclarations, importStatements, exportDeclarations];
+	return [
+		importDeclarations,
+		importStatements,
+		importMetaUrls,
+		exportDeclarations
+	];
 }
 
 export function transform(source: string, id: string) {
-	const [importDeclarations, importStatements, exportDeclarations] = find(source);
+	const [
+		importDeclarations,
+		importStatements,
+		importMetaUrls,
+		exportDeclarations
+	] = find(source, id);
 
 	const nameBySource = new Map();
 
@@ -613,6 +659,7 @@ export function transform(source: string, id: string) {
 	const ranges: any[] = [
 		...importDeclarations,
 		...importStatements,
+		...importMetaUrls,
 		...exportDeclarations
 	].sort((a, b) => a.start - b.start);
 
