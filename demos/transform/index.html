@@ -78,6 +78,8 @@
 			import { a, b } from './bar.js';
 			import * as baz from './baz.js';
 
+			console.log(import.meta.url);
+
 			export const answer = 42;
 			`.trim().replace(/^\t+/gm, '');
 
