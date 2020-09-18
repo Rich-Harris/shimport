@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 2.0.1
+
+* Fix regex
+
 ## 2.0.0
 
 * Switch to MIT License ([#28](https://github.com/Rich-Harris/shimport/issues/28))
