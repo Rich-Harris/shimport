@@ -30,7 +30,7 @@
     "prepublishOnly": "npm test && npm run build",
     "deploy": "npm run build && npm run demos:build && surge demos --domain shimport-demos.surge.sh",
     "demos:build": "cp index.js demos/shimport.js && cp index.dev.js demos/shimport.dev.js && node demos/build.js",
-    "demos:start": "sirv demos"
+    "demos:start": "sirv demos --dev"
   },
   "license": "MIT"
 }

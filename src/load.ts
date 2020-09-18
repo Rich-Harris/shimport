@@ -31,7 +31,7 @@ export function load(url: string | URL) {
 let uid = 1;
 
 function evaluate(code: string) {
-	if (typeof URL !== 'undefined') {
+	if (typeof document !== 'undefined' && typeof URL !== 'undefined') {
 		return new Promise(fulfil => {
 			const id = `__shimport__${uid++}`;
 
@@ -53,6 +53,6 @@ function evaluate(code: string) {
 
 	} else {
 		// for browsers without `URL`
-		return <unknown>alert(code); // 'alert' is replaced with `(0,eval)`
+		return <unknown>(0,eval)(code);
 	}
 }

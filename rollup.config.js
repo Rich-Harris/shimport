@@ -13,17 +13,11 @@ const config = dev => ({
 		}
 	],
 	plugins: [
-		replace({ __VERSION__: pkg.version }),
 		sucrase({ transforms: ['typescript'] }),
-		!dev && terser(),
-		{
-			transformBundle(code) {
-				return {
-					code: code.replace('alert', '(0,eval)'),
-					map: null
-				};
-			}
-		}
+		replace({
+			__VERSION__: pkg.version
+		}),
+		!dev && terser()
 	]
 })
 
