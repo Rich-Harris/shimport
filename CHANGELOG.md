@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 2.0.2
+
+* Coerce `id` to string ([#32](https://github.com/Rich-Harris/shimport/pull/32))
+
 ## 2.0.1
 
 * Fix regex
