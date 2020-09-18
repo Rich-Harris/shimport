@@ -220,7 +220,7 @@ function getImportStatement(i: number) {
 	};
 }
 
-const importMetaUrlPattern = /^import[\s\n]*\.[\s\n]*meta[\s\n]*\.[\s\n]*url/;
+const importMetaUrlPattern = /^import\s*\.\s*meta\s*\.\s*url/;
 
 function getImportMetaUrl(str: string, start: number, id: string) {
 	const match = importMetaUrlPattern.exec(str.slice(start));
