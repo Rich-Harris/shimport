@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 2.0.3
+
+* Fall back to `eval` if `document` is undefined ([#26](https://github.com/Rich-Harris/shimport/issues/26))
+
 ## 2.0.2
 
 * Coerce `id` to string ([#32](https://github.com/Rich-Harris/shimport/pull/32))
