@@ -229,7 +229,7 @@ function getImportMetaUrl(str: string, start: number, id: string) {
 			start,
 			end: start + match[0].length,
 			toString() {
-				return JSON.stringify(id);
+				return JSON.stringify('' + id);
 			}
 		}
 	}
