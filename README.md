@@ -95,6 +95,13 @@ Blazingly. The code transformation is fast enough that you probably don't need t
 A future version of Shimport may use web workers to do the transformation off the main thread.
 
 
+## Browser support
+
+Shimport *only* transpiles the `import` and `export` statements in your code. If you want to use other features in browsers that do not support them, they will need to be transpiled separately.
+
+Shimport also expects to be able to use `Array.from`, `fetch`, `Map` and `URL`. On browsers like Internet Explorer, you will need to bring your own polyfills. One easy way to get these is to use something like [Polyfill.io](https://polyfill.io).
+
+
 ## Caveats
 
 The JavaScript module specification is complex, and extremely hard to implement completely with the techniques Shimport uses. It is designed to meet the 98% of cases you encounter in the real world, rather than covering the entire spec at the cost of becoming prohibitively slow and complex.
