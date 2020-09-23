@@ -1,4 +1,4 @@
-import sucrase from '@rollup/plugin-sucrase';
+import typescript from '@rollup/plugin-typescript';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
@@ -13,11 +13,17 @@ const config = dev => ({
 		}
 	],
 	plugins: [
-		sucrase({ transforms: ['typescript'] }),
 		replace({
 			__VERSION__: pkg.version
 		}),
-		!dev && terser()
+		typescript({
+			typescript: require('typescript')
+		}),
+		!dev && terser({
+			output: {
+				comments: false
+			}
+		})
 	]
 })
 
