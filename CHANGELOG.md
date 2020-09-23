@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 2.0.4
+
+* Publish as ES5 so that browsers can use Shimport untranspiled ([#34](https://github.com/Rich-Harris/shimport/issues/34))
+
 ## 2.0.3
 
 * Fall back to `eval` if `document` is undefined ([#26](https://github.com/Rich-Harris/shimport/issues/26))
