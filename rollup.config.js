@@ -19,7 +19,11 @@ const config = dev => ({
 		typescript({
 			typescript: require('typescript')
 		}),
-		!dev && terser()
+		!dev && terser({
+			output: {
+				comments: false
+			}
+		})
 	]
 })
 
