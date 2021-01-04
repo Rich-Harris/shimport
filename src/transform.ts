@@ -30,24 +30,9 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 		end,
 		source,
 		name,
-		toString(nameBySource: Map<string, string>) {
-			const name = nameBySource.get(source);
-
-			const assignments = specifiers
-				.sort((a, b) => {
-					if (a.name === 'default') return 1;
-					if (b.name === 'default') return -1;
-				})
-				.map(s => {
-					if (s.name === '*') return null;
-					if (s.name === 'default' && s.as === name) return `${s.as} = ${name}.default;`;
-					return `var ${s.as} = ${name}.${s.name};`;
-				});
-
-			return (
-				assignments.join(' ') + ' /*' +
-				str.slice(start, end) + '*/'
-			).trim();
+		specifiers,
+		toString() {
+			return `/*${str.slice(start, end)}*/`;
 		}
 	};
 }
@@ -91,7 +76,7 @@ function exportSpecifiersDeclaration(str: string, start: number, specifiersStart
 		end,
 		source,
 		toString(nameBySource: Map<string, string>) {
-			const name = nameBySource.get(source);
+			const name = source && nameBySource.get(source);
 
 			return specifiers
 				.map(s => {
@@ -651,7 +636,27 @@ export function transform(source: string, id: string) {
 	const names = ['__import', '__exports'].concat(Array.from(nameBySource.values()))
 		.join(', ');
 
-	let transformed = `__shimport__.define('${id}', [${deps}], function(${names}){ `;
+	const hoisted: string[] = [];
+	importDeclarations.forEach(decl => {
+		const name = nameBySource.get(decl.source);
+
+		decl.specifiers
+			.sort((a: Specifier, b: Specifier) => {
+				if (a.name === 'default') return 1;
+				if (b.name === 'default') return -1;
+			})
+			.forEach((s: Specifier) => {
+				if (s.name !== '*') {
+					const assignment = (s.name === 'default' && s.as === name)
+						? `${s.as} = ${name}.default; `
+						: `var ${s.as} = ${name}.${s.name}; `;
+
+					hoisted.push(assignment);
+				}
+			});
+	});
+
+	let transformed = `__shimport__.define('${id}', [${deps}], function(${names}){ ${hoisted.join('')}`;
 
 	const ranges: any[] = [
 		...importDeclarations,
