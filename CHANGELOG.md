@@ -1,5 +1,9 @@
 # Shimport changelog
 
+## 2.0.5
+
+* Hoist imports ([#36](https://github.com/Rich-Harris/shimport/issues/36))
+
 ## 2.0.4
 
 * Publish as ES5 so that browsers can use Shimport untranspiled ([#34](https://github.com/Rich-Harris/shimport/issues/34))
