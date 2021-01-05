@@ -1,28 +1,44 @@
-type State = {
+//@ts-check
+
+/** @typedef {{
 	name?: string;
 	pattern: RegExp;
 	handlers: Array<(i?: number, token?: string) => State | void>
-};
+}} State */
 
-type Specifier = {
+/** @typedef {{
 	name: string;
 	as: string;
-}
+}} Specifier */
 
-interface Range {
+/** @typedef {{
 	start: number;
 	end: number;
+	toString: (nameBySource?: Map<string, string>) => string;
+	specifiers?: Specifier[];
 	[key: string]: any;
-}
+}} Range */
 
-function get_alias(specifiers: Specifier[], name: string) {
+/**
+ *
+ * @param {Specifier[]} specifiers
+ * @param {string} name
+ */
+function get_alias(specifiers, name) {
 	let i = specifiers.length;
 	while (i--) {
 		if (specifiers[i].name === name) return specifiers[i].as;
 	}
 }
 
-function importDecl(str: string, start: number, end: number, specifiers: Specifier[], source: string) {
+/**
+ * @param {string} str
+ * @param {number} start
+ * @param {number} end
+ * @param {Specifier[]} specifiers
+ * @param {string} source
+ */
+function importDecl(str, start, end, specifiers, source) {
 	const name = get_alias(specifiers, '*') || get_alias(specifiers, 'default');
 
 	return {
@@ -37,7 +53,12 @@ function importDecl(str: string, start: number, end: number, specifiers: Specifi
 	};
 }
 
-function exportDefaultDeclaration(str: string, start: number, end: number) {
+/**
+ * @param {string} str
+ * @param {number} start
+ * @param {number} end
+ */
+function exportDefaultDeclaration(str, start, end) {
 	const match = /^\s*(?:(class)(\s+extends|\s*{)|(function)\s*\()/.exec(str.slice(end));
 
 	if (match) {
@@ -68,14 +89,25 @@ function exportDefaultDeclaration(str: string, start: number, end: number) {
 	};
 }
 
-function exportSpecifiersDeclaration(str: string, start: number, specifiersStart: number, specifiersEnd: number, end: number, source: string) {
+/**
+ * @param {string} str
+ * @param {number} start
+ * @param {number} specifiersStart
+ * @param {number} specifiersEnd
+ * @param {number} end
+ * @param {string} source
+ */
+function exportSpecifiersDeclaration(str, start, specifiersStart, specifiersEnd, end, source) {
 	const specifiers = processSpecifiers(str.slice(specifiersStart + 1, specifiersEnd - 1).trim());
 
 	return {
 		start,
 		end,
 		source,
-		toString(nameBySource: Map<string, string>) {
+		/**
+		 * @param {Map<string, string>} nameBySource
+		 */
+		toString(nameBySource) {
 			const name = source && nameBySource.get(source);
 
 			return specifiers
@@ -87,7 +119,12 @@ function exportSpecifiersDeclaration(str: string, start: number, specifiersStart
 	};
 }
 
-function exportDecl(str: string, start: number, c: number) {
+/**
+ * @param {string} str
+ * @param {number} start
+ * @param {number} c
+ */
+function exportDecl(str, start, c) {
 	const end = c;
 
 	while (str[c] && /\S/.test(str[c])) c += 1;
@@ -109,12 +146,21 @@ function exportDecl(str: string, start: number, c: number) {
 	};
 }
 
-function exportStarDeclaration(str: string, start: number, end: number, source: string) {
+/**
+ * @param {string} str
+ * @param {number} start
+ * @param {number} end
+ * @param {string} source
+ */
+function exportStarDeclaration(str, start, end, source) {
 	return {
 		start,
 		end,
 		source,
-		toString(nameBySource: Map<string, string>) {
+		/**
+		 * @param {Map<string, string>} nameBySource
+		 */
+		toString(nameBySource) {
 			return `Object.assign(__exports, ${nameBySource.get(source)}); /*${str.slice(start, end)}*/`;
 		}
 	};
@@ -129,12 +175,18 @@ const keywordChars = /[a-zA-Z_$0-9]/;
 
 const whitespace_obj = { ' ': 1, '\t': 1, '\n': 1, '\r': 1, '\f': 1, '\v': 1, '\u00A0': 1, '\u2028': 1, '\u2029': 1 };
 
-function isWhitespace(char: string) {
+/**
+ * @param {string} char
+ */
+function isWhitespace(char) {
 	// this is faster than testing a regex
 	return char in whitespace_obj;
 }
 
-function isQuote(char: string) {
+/**
+ * @param {string} char
+ */
+function isQuote(char) {
 	return char === "'" || char === '"';
 }
 
@@ -142,7 +194,11 @@ const namespaceImport = /^\*\s+as\s+(\w+)$/;
 const defaultAndStarImport = /(\w+)\s*,\s*\*\s*as\s*(\w+)$/;
 const defaultAndNamedImport = /(\w+)\s*,\s*{(.+)}$/;
 
-function processImportSpecifiers(str: string): Specifier[] {
+/**
+ * @param {string} str
+ * @returns {Specifier[]}
+ */
+function processImportSpecifiers(str) {
 	let match = namespaceImport.exec(str);
 	if (match) {
 		return [{ name: '*', as: match[1] }];
@@ -165,7 +221,11 @@ function processImportSpecifiers(str: string): Specifier[] {
 	return [];
 }
 
-function processSpecifiers(str: string) {
+/**
+ * @param {string} str
+ * @returns {Specifier[]}
+ */
+function processSpecifiers(str) {
 	return str
 		? str.split(',').map(part => {
 			const [name, , as] = part.trim().split(/[^\S]+/);
@@ -174,7 +234,11 @@ function processSpecifiers(str: string) {
 		: [];
 }
 
-function getImportDeclaration(str: string, i: number) {
+/**
+ * @param {string} str
+ * @param {number} i
+ */
+function getImportDeclaration(str, i) {
 	const start = i;
 
 	const specifierStart = i += 6;
@@ -195,7 +259,10 @@ function getImportDeclaration(str: string, i: number) {
 	);
 }
 
-function getImportStatement(i: number) {
+/**
+ * @param {number} i
+ */
+function getImportStatement(i) {
 	return {
 		start: i,
 		end: i + 6,
@@ -207,7 +274,12 @@ function getImportStatement(i: number) {
 
 const importMetaUrlPattern = /^import\s*\.\s*meta\s*\.\s*url/;
 
-function getImportMetaUrl(str: string, start: number, id: string) {
+/**
+ * @param {string} str
+ * @param {number} start
+ * @param {string} id
+ */
+function getImportMetaUrl(str, start, id) {
 	const match = importMetaUrlPattern.exec(str.slice(start));
 	if (match) {
 		return {
@@ -220,7 +292,11 @@ function getImportMetaUrl(str: string, start: number, id: string) {
 	}
 }
 
-function getExportDeclaration(str: string, i: number) {
+/**
+ * @param {string} str
+ * @param {number} i
+ */
+function getExportDeclaration(str, i) {
 	const start = i;
 
 	i += 6;
@@ -292,28 +368,45 @@ function getExportDeclaration(str: string, i: number) {
 	);
 }
 
-function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
-	let escapedFrom: State;
+/**
+ * @param {string} str
+ * @param {string} id
+ * @returns {[Range[], Range[], Range[], Range[]]}
+ */
+function find(str, id) {
+	/** @type {State} */
+	let escapedFrom;
 	let regexEnabled = true;
 	let pfixOp = false;
 
-	const stack: State[] = [];
+	/** @type {State[]} */
+	const stack = [];
 
 	let lsci = -1; // last significant character index
 	const lsc = () => str[lsci];
 
-	var parenMatches: Record<string, number> = {};
-	var openingParenPositions: Record<string, number> = {};
-	var parenDepth = 0;
+	/** @type {Record<string, number>} */
+	const parenMatches = {};
 
-	const importDeclarations: Range[] = [];
-	const importStatements: Range[] = [];
-	const importMetaUrls: Range[] = [];
-	const exportDeclarations: Range[] = [];
+	/** @type {Record<string, number>} */
+	const openingParenPositions = {};
+	let parenDepth = 0;
+
+	/** @type {Range[]} */
+	const importDeclarations = [];
+
+	/** @type {Range[]} */
+	const importStatements = [];
+
+	/** @type {Range[]} */
+	const importMetaUrls = [];
+
+	/** @type {Range[]} */
+	const exportDeclarations = [];
 
 	function tokenClosesExpression() {
 		if (lsc() === ')') {
-			var c = parenMatches[lsci];
+			let c = parenMatches[lsci];
 			while (isWhitespace(str[c - 1])) {
 				c -= 1;
 			}
@@ -326,54 +419,55 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		return true;
 	}
 
-	const base: State = {
+	/** @type {State} */
+	const base = {
 		pattern: /(?:(\()|(\))|({)|(})|(")|(')|(\/\/)|(\/\*)|(\/)|(`)|(import)|(export)|(\+\+|--))/g,
 
 		handlers: [
 			// (
-			(i: number) => {
+			(i) => {
 				lsci = i;
 				openingParenPositions[parenDepth++] = i;
 			},
 
 			// )
-			(i: number) => {
+			(i) => {
 				lsci = i;
 				parenMatches[i] = openingParenPositions[--parenDepth];
 			},
 
 			// {
-			(i: number) => {
+			(i) => {
 				lsci = i;
 				stack.push(base);
 			},
 
 			// }
-			(i: number) => {
+			(i) => {
 				lsci = i;
 				return stack.pop();
 			},
 
 			// "
-			(i: number) => {
+			(i) => {
 				stack.push(base);
 				return double_quoted;
 			},
 
 			// '
-			(i: number) => {
+			(i) => {
 				stack.push(base);
 				return single_quoted;
 			},
 
 			// //
-			(i: number) => line_comment,
+			(i) => line_comment,
 
 			// /*
-			(i: number) => block_comment,
+			(i) => block_comment,
 
 			// /
-			(i: number) => {
+			(i) => {
 				// could be start of regex literal OR division punctuator. Solution via
 				// http://stackoverflow.com/questions/5519596/when-parsing-javascript-what-determines-the-meaning-of-a-slash/27120110#27120110
 
@@ -410,10 +504,10 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 			},
 
 			// `
-			(i: number) => template_string,
+			(i) => template_string,
 
 			// import
-			(i: number) => {
+			(i) => {
 				if (i === 0 || isWhitespace(str[i - 1]) || punctuatorChars.test(str[i - 1])) {
 					let j = i + 6;
 					let char;
@@ -447,7 +541,7 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 			},
 
 			// export
-			(i: number) => {
+			(i) => {
 				if (i === 0 || isWhitespace(str[i - 1]) || punctuatorChars.test(str[i - 1])) {
 					if (/export[\s\n{]/.test(str.slice(i, i + 7))) {
 						const d = getExportDeclaration(str, i);
@@ -458,28 +552,30 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 			},
 
 			// ++/--
-			(i: number) => {
+			(i) => {
 				pfixOp = (!pfixOp && str[i - 1] === '+');
 			}
 		]
 	};
 
-	const slash: State = {
+	/** @type {State} */
+	const slash = {
 		pattern: /(?:(\[)|(\\)|(.))/g,
 
 		handlers: [
 			// [
-			(i: number) => regexEnabled ? regex_character : base,
+			(i) => regexEnabled ? regex_character : base,
 
 			// \\
-			(i: number) => ((escapedFrom = regex), escaped),
+			(i) => ((escapedFrom = regex), escaped),
 
 			// anything else
-			(i: number) => regexEnabled && !pfixOp ? regex : base
+			(i) => regexEnabled && !pfixOp ? regex : base
 		]
 	};
 
-	const regex: State = {
+	/** @type {State} */
+	const regex = {
 		pattern: /(?:(\[)|(\\)|(\/))/g,
 
 		handlers: [
@@ -494,7 +590,8 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
-	const regex_character: State = {
+	/** @type {State} */
+	const regex_character = {
 		pattern: /(?:(\])|(\\))/g,
 
 		handlers: [
@@ -506,7 +603,8 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
-	const double_quoted: State = {
+	/** @type {State} */
+	const double_quoted = {
 		pattern: /(?:(\\)|("))/g,
 
 		handlers: [
@@ -518,7 +616,8 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
-	const single_quoted: State = {
+	/** @type {State} */
+	const single_quoted = {
 		pattern: /(?:(\\)|('))/g,
 
 		handlers: [
@@ -530,7 +629,8 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
-	const escaped: State = {
+	/** @type {State} */
+	const escaped = {
 		pattern: /(.)/g,
 
 		handlers: [
@@ -538,7 +638,8 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
-	const template_string: State = {
+	/** @type {State} */
+	const template_string = {
 		pattern: /(?:(\${)|(\\)|(`))/g,
 
 		handlers: [
@@ -556,6 +657,7 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
+	/** @type {State} */
 	const line_comment = {
 		pattern: /((?:\n|$))/g,
 
@@ -565,6 +667,7 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 		]
 	};
 
+	/** @type {State} */
 	const block_comment = {
 		pattern: /(\*\/)/g,
 
@@ -608,7 +711,11 @@ function find(str: string, id: string): [Range[], Range[], Range[], Range[]] {
 	];
 }
 
-export function transform(source: string, id: string) {
+/**
+ * @param {string} source
+ * @param {string} id
+ */
+export function transform(source, id) {
 	const [
 		importDeclarations,
 		importStatements,
@@ -636,16 +743,17 @@ export function transform(source: string, id: string) {
 	const names = ['__import', '__exports'].concat(Array.from(nameBySource.values()))
 		.join(', ');
 
-	const hoisted: string[] = [];
+	/** @type {string[]} */
+	const hoisted = [];
 	importDeclarations.forEach(decl => {
 		const name = nameBySource.get(decl.source);
 
 		decl.specifiers
-			.sort((a: Specifier, b: Specifier) => {
+			.sort((a, b) => {
 				if (a.name === 'default') return 1;
 				if (b.name === 'default') return -1;
 			})
-			.forEach((s: Specifier) => {
+			.forEach((s) => {
 				if (s.name !== '*') {
 					const assignment = (s.name === 'default' && s.as === name)
 						? `${s.as} = ${name}.default; `
@@ -658,7 +766,7 @@ export function transform(source: string, id: string) {
 
 	let transformed = `__shimport__.define('${id}', [${deps}], function(${names}){ ${hoisted.join('')}`;
 
-	const ranges: any[] = [
+	const ranges = [
 		...importDeclarations,
 		...importStatements,
 		...importMetaUrls,

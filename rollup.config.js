@@ -1,24 +1,23 @@
-import typescript from '@rollup/plugin-typescript';
+import buble from '@rollup/plugin-buble';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
 
 const config = dev => ({
-	input: 'src/index.ts',
+	input: 'src/index.js',
 	output: [
 		{
 			file: dev ? 'index.dev.js' : pkg.main,
 			format: 'iife',
-			name: '__shimport__'
+			name: '__shimport__',
+			esModule: false
 		}
 	],
 	plugins: [
 		replace({
 			__VERSION__: pkg.version
 		}),
-		typescript({
-			typescript: require('typescript')
-		}),
+		buble(),
 		!dev && terser({
 			output: {
 				comments: false
