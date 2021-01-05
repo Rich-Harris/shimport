@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as fs from 'fs';
 import * as assert from 'assert';
-import * as shimport from '../src/index';
+import * as shimport from '../src/index.js';
 
 fs.readdirSync('test/samples').forEach(dir => {
 	if (dir[0] === '.') return;
