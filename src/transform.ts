@@ -138,8 +138,9 @@ function isQuote(char: string) {
 	return char === "'" || char === '"';
 }
 
-const namespaceImport = /^\*\s+as\s+(\w+)$/;
-const defaultAndStarImport = /(\w+)\s*,\s*\*\s*as\s*(\w+)$/;
+const 
+Import = /^\*\s+as\s+(\S+)$/;
+const defaultAndStarImport = /(\w+)\s*,\s*\*\s*as\s*(\S+)$/;
 const defaultAndNamedImport = /(\w+)\s*,\s*{(.+)}$/;
 
 function processImportSpecifiers(str: string): Specifier[] {
